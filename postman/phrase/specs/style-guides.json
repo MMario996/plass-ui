@@ -1,0 +1,3181 @@
+{
+  "openapi": "3.1.0",
+  "info" : {
+    "version" : "2.1.0",
+    "title": "Style Guide API",
+    "description": "REST API for managing Style Guides on the Phrase Platform",
+    "contact": {
+      "name": "Linguistic Assets",
+      "email": "engineering@phrase.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://eu.phrase.com/styleguide",
+      "description": "Production EU"
+    },
+    {
+      "url": "https://us.phrase.com/styleguide",
+      "description": "Production US"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Style Guide",
+      "description": "Public API for managing Style Guides"
+    },
+    {
+      "name": "Rule",
+      "description": "Public API for managing Rules"
+    }
+  ],
+  "paths": {
+    "/api/v2/styleguides/{id}": {
+      "put": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Update a Style Guide (v2)",
+        "description": "Updates a Style Guide with a Content Group. When a new file is uploaded, returns 202 with a jobId; poll the **Get update job status** API for the final result. Metadata-only updates return 200 with the updated Style Guide. Content-Type can be omitted for metadata-only updates; use multipart/form-data when uploading a file. ",
+        "operationId": "updateStyleGuideV2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Style Guide ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "01900000-0000-7000-8000-000000000001"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Updated name",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Updated description",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 250,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "versionChangeReason",
+            "in": "query",
+            "description": "Optional description of the version change",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 250,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "includeVersions",
+            "in": "query",
+            "description": "Whether to include versions in the response",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "contentGroupId",
+            "in": "query",
+            "description": "Content Group identifier from the Content Group Service.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional new file to create a new version. Maximum size: 150 KiB."
+                  }
+                }
+              }
+            },
+            "*/*": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional new file to create a new version. Maximum size: 150 KiB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Metadata-only update completed synchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Update job accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideAsyncAcceptedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data or file. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT, MISSING_REQUEST_PARAMETER, UNSUPPORTED_FILE_TYPE, UNSUPPORTED_FILE_EXTENSION.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden — MANAGE right required. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found. Error codes: STYLEGUIDE_NOT_FOUND, CONTENT_GROUP_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict. Error codes: DUPLICATE_STYLEGUIDE_NAME, DUPLICATE_CONTENT_GROUP_LANGUAGE, API_VERSION_NOT_AVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large. Error codes: FILE_SIZE_EXCEEDED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Content-Type. Error codes: UNSUPPORTED_MEDIA_TYPE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service rejected the request. Error codes: UPSTREAM_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Upstream service temporarily unavailable. Error codes: SERVICE_UNAVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/{id}": {
+      "get": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Get a Style Guide",
+        "description": "Returns a Style Guide.",
+        "operationId": "getStyleGuide",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Style Guide ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "includeVersions",
+            "in": "query",
+            "description": "Whether to include versions in the response",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Style Guide retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions or accessing Style Guide from another organization. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Style Guide not found. Error codes: STYLEGUIDE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service rejected the request. Error codes: UPSTREAM_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Update a Style Guide",
+        "description": "**Deprecated** — use `PUT /api/v2/styleguides/{id}` for new integrations. Updates a Style Guide. When a new file is uploaded, returns 202 with a jobId; poll the **Get update job status** API for the final result. Metadata-only updates return 200 with the updated Style Guide. Content-Type can be omitted for metadata-only updates; use multipart/form-data when uploading a file.",
+        "operationId": "updateStyleGuide",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Updated name",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Updated description",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 250,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "versionChangeReason",
+            "in": "query",
+            "description": "Optional description of the version change",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 250,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "includeVersions",
+            "in": "query",
+            "description": "Whether to include versions in the response",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional new file to create a new version. Maximum size: 150 KiB."
+                  }
+                }
+              }
+            },
+            "*/*": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional new file to create a new version. Maximum size: 150 KiB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Metadata-only update completed synchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Update job accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideAsyncAcceptedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data or file. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT, UNSUPPORTED_FILE_TYPE, UNSUPPORTED_FILE_EXTENSION.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden — MANAGE right required. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Style Guide not found. Error codes: STYLEGUIDE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate Style Guide name. Error codes: DUPLICATE_STYLEGUIDE_NAME.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large. Error codes: FILE_SIZE_EXCEEDED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Content-Type. Error codes: UNSUPPORTED_MEDIA_TYPE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service rejected the request. Error codes: UPSTREAM_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Upstream service temporarily unavailable. Error codes: SERVICE_UNAVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/v2/styleguides": {
+      "post": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Create a Style Guide (v2)",
+        "description": "Creates a Style Guide from a Markdown file with a Content Group. Returns 202 with a jobId; poll the **Get create job status** API for the final result.",
+        "operationId": "createStyleGuideV2",
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Language locale code (e.g., en, en-GB, sv-SE)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name for the initial version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Description for the initial version",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 250,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "includeVersions",
+            "in": "query",
+            "description": "Whether to include versions in the Style Guide response when polling the async create job status",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "contentGroupId",
+            "in": "query",
+            "description": "ID of the Content Group to be associated with the Style Guide.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Style Guide file in Markdown format. Maximum size: 150 KiB."
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Job accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideAsyncAcceptedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data or file. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT, MISSING_REQUEST_PARAMETER, UNSUPPORTED_FILE_TYPE, UNSUPPORTED_FILE_EXTENSION.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden — MANAGE right required. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Content Group not found. Error codes: CONTENT_GROUP_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict. Error codes: DUPLICATE_STYLEGUIDE_NAME, DUPLICATE_CONTENT_GROUP_LANGUAGE, API_VERSION_NOT_AVAILABLE, STYLE_GUIDE_LIMIT_REACHED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large. Error codes: FILE_SIZE_EXCEEDED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides": {
+      "post": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Create a Style Guide",
+        "description": "**Deprecated** — use `POST /api/v2/styleguides` for new integrations. Creates a Style Guide from a Markdown file. Returns 202 with a jobId; poll the **Get create job status** API for the final result.",
+        "operationId": "createStyleGuide",
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Language locale code (e.g., en, en-GB, sv-SE)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name for the initial version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Description for the initial version",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 250,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "includeVersions",
+            "in": "query",
+            "description": "Whether to include versions in the Style Guide response when polling the async create job status",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Style Guide file in Markdown format. Maximum size: 150 KiB."
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Job accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideAsyncAcceptedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data or file. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT, UNSUPPORTED_FILE_TYPE, UNSUPPORTED_FILE_EXTENSION.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden — MANAGE right required. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large. Error codes: FILE_SIZE_EXCEEDED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      },
+      "delete": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Delete Style Guides",
+        "description": "Deletes the listed Style Guides and all of their versions. Partial success is possible; the response reports the deleted count and per-item failures.",
+        "operationId": "deleteStyleGuides",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteStyleGuidesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Style Guides deleted successfully (partial success possible)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteStyleGuidesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions or accessing Style Guide from another organization. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/search": {
+      "post": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "List Style Guides",
+        "description": "Returns a paginated list of Style Guides. Filter by name, language, last-modified range, or last-modified user; sort by name, language, or last-modified date.",
+        "operationId": "searchStyleGuides",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListStyleGuidesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Style Guides retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideListPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body (e.g., invalid language format, invalid date range, invalid sort field). Error codes: VALIDATION_ERROR, INVALID_ARGUMENT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions, or the caller\u0027s organization settings don\u0027t allow Style Guide Library access to users with read-only access (e.g. linguists). Error codes: ACCESS_DENIED, STYLEGUIDE_LIBRARY_RESTRICTED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules": {
+      "post": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Create a Rule",
+        "description": "Creates a Rule for the authenticated organization.\n\n### Active-rule and AI-check limits\nEach organization has a limit on active rules and on active, AI-check-enabled rules per\n(Content Group, Language) pair. Whether the created rule counts against those limits — and\nwhether an over-limit request fails or is silently adjusted — depends on whether `active` /\n`aiCheckEnabled` were explicitly set in the request:\n\n| `active` in request | Active-rule limit reached for scope? | Result |\n|---|---|---|\n| `true` (explicit) | No | Created **active** |\n| `true` (explicit) | Yes | `409 RULE_ACTIVE_LIMIT_REACHED` |\n| `false` (explicit) | — | Created **inactive** |\n| omitted | No | Auto-decided: created **active** |\n| omitted | Yes | Auto-decided: created **inactive** (no error) |\n\n| `aiCheckEnabled` in request | Resulting `active` | AI-check limit reached for scope? | Result |\n|---|---|---|---|\n| `true` (explicit) | `false` | — | `400 INVALID_ARGUMENT` (AI-check requires an active rule) |\n| `true` (explicit) | `true` | No | Created with AI-check **enabled** |\n| `true` (explicit) | `true` | Yes | `409 RULE_AI_CHECK_LIMIT_REACHED` |\n| `false` (explicit) | any | — | Created with AI-check **disabled** |\n| omitted | `false` | — | AI-check **disabled** (no auto-enable) |\n| omitted | `true` | No | Auto-decided: AI-check **enabled** |\n| omitted | `true` | Yes | Auto-decided: AI-check **disabled** (no error) |\n\nThe active-rule limit is checked before the AI-check limit, so an explicit `active\u003dtrue`\nthat is already over the active-rule limit fails without evaluating the AI-check limit at all.\n\n### The \"All Groups\" system content group\nPassing the organization\u0027s Control Hub \"All Groups\" system content group ID as the sole entry\nin `contentGroupIds` is equivalent to setting `allContentGroups\u003dtrue` — the rule is created\nwith `allContentGroups\u003dtrue` and an empty `contentGroupIds`, the same as if the system content\ngroup ID had never been mentioned. Combining the system content group ID with any other\ncontent group ID in the same request is rejected with `400 INVALID_ARGUMENT`.\n\n### Activation lock\nLimit checks are performed under a per-organization activation lock to prevent race\nconditions between concurrent create/update requests. If the lock cannot be acquired,\nthe request fails with `503 RULE_ACTIVATION_LOCK_UNAVAILABLE` — retry the request.\n",
+        "operationId": "createRule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Rule created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT (also returned when the system content group ID is combined with another content group ID).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Creating this Rule as active (or AI-check-enabled) would exceed the active-rule or active-AI-check limit for one of its Content Group/Language combinations. Error codes: RULE_ACTIVE_LIMIT_REACHED, RULE_AI_CHECK_LIMIT_REACHED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary conflict acquiring the activation lock for this organization. Retry the request. Error codes: RULE_ACTIVATION_LOCK_UNAVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Delete Rules",
+        "description": "Permanently deletes the listed Rules. Partial success is possible; the response reports the deleted count and per-rule failures (e.g. an ID that doesn\u0027t exist).",
+        "operationId": "bulkDeleteRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteRulesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rules deleted (partial success possible)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkDeleteRulesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data. Error codes: VALIDATION_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions, or one of the requested Rules belongs to another organization. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Enable or disable Rules in bulk",
+        "description": "Enables or disables the listed Rules in a single request. One endpoint handles both\ndirections via the `active` field, using the same semantics as `active` on `createRule`/\n`updateRule`. Partial success is possible; the response reports the updated count and\nper-rule failures.\n\n### Enabling (`active\u003dtrue`)\nRules are enabled in the order given in `ruleIds`. A Rule whose (Content Group, Language)\nscope has no room left under the organization\u0027s active-rule limit is skipped — reported as\na `RULE_ACTIVE_LIMIT_REACHED` failure — while later Rules with a different scope are still\nattempted. This never changes `aiCheckEnabled`, matching `updateRule`\u0027s behavior for an\nexplicit `active\u003dtrue` with no `aiCheckEnabled` in the request.\n\n### Disabling (`active\u003dfalse`)\nEvery listed Rule is disabled, and `aiCheckEnabled` is forced to `false` on each — AI check\nrequires an active Rule, the same cascade `updateRule` already applies for a single Rule.\n\n### Consistency guarantee\nWhen `active\u003dtrue`, the active-rule limit check is atomic across the whole batch: every\nRule in the request is evaluated against a single consistent view of each scope\u0027s limit,\nthe same guarantee `createRule`/`updateRule` provide for a single Rule. If that guarantee\ncannot be honored right now, the request fails with `503 RULE_ACTIVATION_LOCK_UNAVAILABLE`\n— retry the request. Not applicable when `active\u003dfalse`.\n",
+        "operationId": "bulkUpdateRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateRulesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rules updated (partial success possible)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkUpdateRulesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data. Error codes: VALIDATION_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions, or one of the requested Rules belongs to another organization. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary conflict acquiring the activation lock for this organization. Retry the request. Error codes: RULE_ACTIVATION_LOCK_UNAVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/search": {
+      "post": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "List Rules",
+        "description": "Returns a paginated, sorted list of Rules. Defaults to creation date descending. Filtering by the organization\u0027s Control Hub \"All Groups\" system content group ID also matches Rules with `allContentGroups\u003dtrue`, since that system content group ID conceptually represents all content groups.",
+        "operationId": "listRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListRulesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rules retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleListPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{id}": {
+      "get": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Get a Rule",
+        "description": "Returns a Rule by ID.",
+        "operationId": "getRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Rule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "01900000-0000-7000-8000-000000000001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rule retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rule not found. Error codes: RULE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Delete a Rule",
+        "description": "Permanently deletes a Rule.",
+        "operationId": "deleteRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Rule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "01900000-0000-7000-8000-000000000001"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Rule deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rule not found. Error codes: RULE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Update a Rule",
+        "description": "Updates a Rule. Only fields present (non-null) in the request body are applied.\n\n### Unlinking from a Style Guide\nEditing the rule text, or removing the linked Style Guide\u0027s content group or language,\nwould unlink the rule from its Style Guide:\n\n| Change would unlink? | `forceUnlink` | Result |\n|---|---|---|\n| Yes | `true` | Applied; rule is unlinked from its Style Guide |\n| Yes | `false` / omitted | `409 RULE_UNLINK_REQUIRES_CONFIRMATION`; no changes applied |\n| No | any | Applied normally |\n\n### Active-rule and AI-check limits\nThe active-rule / active-AI-check limits for the rule\u0027s (Content Group, Language) scope are\nre-checked only when the resulting state could newly breach them — an unchanged rule (same\nscope, same active/AI-check state) is never re-checked, since it already satisfied the\nlimits under its prior scope. What happens on a breach depends on whether the caller\nexplicitly requested `active\u003dtrue`/`aiCheckEnabled\u003dtrue`, or the breach is caused solely by\na content-group/language scope change:\n\n| Resulting `active` | `active` requested? | Scope changed? | Re-checked? | On breach |\n|---|---|---|---|---|\n| `true` | Yes (explicit) | — | Yes | `409 RULE_ACTIVE_LIMIT_REACHED`, no changes applied |\n| `true` (unchanged) | No | Yes | Yes | Rule auto-disabled; scope change still saved |\n| `true` (unchanged) | No | No | No | — |\n| `false` | — | — | No | — |\n\nAn explicit `aiCheckEnabled\u003dtrue` counts as an explicit activation request for this table\ntoo, even when `active` itself is omitted (already-active rule) — AI check requires an\nactive rule, so a breach in that case also returns `409 RULE_ACTIVE_LIMIT_REACHED` rather\nthan being auto-disabled.\n\nThe same rule applies to `aiCheckEnabled` against the AI-check limit (auto-disabling only\n`aiCheckEnabled`, leaving the rule active, when the breach is scope-change-caused). The\nactive-rule limit is checked before the AI-check limit (see `createRule`); a scope-change-\ncaused active-limit breach fully disables the rule and skips the AI-check re-check entirely,\nsince a disabled rule can\u0027t be AI-check-enabled either way.\n\nOn breach caused by an explicit `active\u003dtrue`/`aiCheckEnabled\u003dtrue` request: `409` with\nerror codes `RULE_ACTIVE_LIMIT_REACHED` / `RULE_AI_CHECK_LIMIT_REACHED` (alongside\n`RULE_UNLINK_REQUIRES_CONFIRMATION` above — both use `409` for this endpoint), and no\nchanges are applied. On breach caused solely by a scope change: no error — the rule is\nauto-disabled as described above and the response reflects its new `active`/\n`aiCheckEnabled` values.\n\n### The \"All Groups\" system content group\nAs with `createRule`, passing the organization\u0027s Control Hub \"All Groups\" system content\ngroup ID as the sole entry in `contentGroupIds` is equivalent to setting\n`allContentGroups\u003dtrue`; combining it with any other content group ID is rejected with\n`400 INVALID_ARGUMENT`.\n\n### Activation lock\nAs with `createRule`, limit re-checks are performed under a per-organization activation\nlock; if it cannot be acquired, the request fails with `503 RULE_ACTIVATION_LOCK_UNAVAILABLE`\n— retry the request.\n",
+        "operationId": "updateRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Rule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "01900000-0000-7000-8000-000000000001"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rule updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. Error codes: VALIDATION_ERROR, INVALID_ARGUMENT (also returned when the system content group ID is combined with another content group ID).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rule not found. Error codes: RULE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Either the update would unlink the rule from its Style Guide (error code RULE_UNLINK_REQUIRES_CONFIRMATION), or an explicit `active\u003dtrue`/`aiCheckEnabled\u003dtrue` in the request would exceed the active-rule or active-AI-check limit for one of its Content Group/Language combinations. A breach caused solely by a content-group/language scope change does not return this error; the rule is auto-disabled instead and the update is applied (see the Active-rule and AI-check limits section above). Error codes: RULE_UNLINK_REQUIRES_CONFIRMATION, RULE_ACTIVE_LIMIT_REACHED, RULE_AI_CHECK_LIMIT_REACHED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary conflict acquiring the activation lock for this organization. Retry the request. Error codes: RULE_ACTIVATION_LOCK_UNAVAILABLE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/{id}/versions/{versionId}": {
+      "get": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Get Style Guide version",
+        "description": "Returns metadata for a specific Style Guide version. The binary file content is not included — use the version download endpoint for that.",
+        "operationId": "getStyleGuideVersionDetails",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Style Guide ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "description": "Version ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StyleGuideVersionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions or accessing Style Guide from another organization. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Style Guide or version not found. Error codes: STYLEGUIDE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/{id}/versions/{versionId}/file": {
+      "get": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Download Style Guide version file",
+        "description": "Returns the raw Markdown file for a Style Guide version, with caching headers set.",
+        "operationId": "getStyleGuideVersionFile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Style Guide ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "versionId",
+            "in": "path",
+            "description": "Version ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tenant",
+            "in": "query",
+            "description": "Tenant identifier (e.g. TMS, Strings). Used for tracking product area.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "event",
+            "in": "query",
+            "description": "Event type. Pass \u0027download\u0027 to track a user-initiated file download.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content retrieved successfully",
+            "content": {
+              "text/markdown": {},
+              "text/x-markdown": {},
+              "application/x-markdown": {},
+              "application/octet-stream": {}
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters (e.g., invalid UUID format). Error codes: INVALID_ARGUMENT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions or accessing Style Guide from another organization. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Style Guide, version, or file content not found. Error codes: STYLEGUIDE_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error or file storage service error. Error codes: FILE_STORAGE_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service rejected the request. Error codes: UPSTREAM_ERROR.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/entities/{entityId}/styleguide-associations": {
+      "get": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Get Style Guide Association",
+        "description": "Returns the style guide association details for the given entity and language, scoped to the authenticated user\u0027s organization. Includes style guide info and the ID of the Style Guide version used. At least one of language or languageId must be provided. languageId is optional and required only for tenants that use custom language variants (for example, Strings). If custom variants are not used, provide only language. When languageId is not provided, language is used as the effective language ID for lookup. When both are provided, languageId is used for lookup. Entity type defaults to PROJECT. When no explicit association exists for the language, falls back to the organization\u0027s default Style Guide (styleGuide.isDefault is true in that case); associationId and the audit timestamp/user fields are null in the fallback response since no association row exists.",
+        "operationId": "getStyleGuideAssociation",
+        "parameters": [
+          {
+            "name": "entityId",
+            "in": "path",
+            "description": "Entity ID (e.g. project ID)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenant",
+            "in": "query",
+            "description": "Tenant identifier. Allowable values: TMS, Strings, Studio.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Tenant identifier. Allowable values: TMS, Strings, Studio.",
+              "enum": [
+                "TMS",
+                "Strings",
+                "Studio"
+              ],
+              "example": "TMS"
+            },
+            "example": "TMS"
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "description": "Entity type (e.g., PROJECT). Optional; defaults to PROJECT if omitted.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Entity type (e.g., PROJECT). Optional; defaults to PROJECT if omitted.",
+              "enum": [
+                "PROJECT",
+                "PROJECT_TEMPLATE"
+              ],
+              "example": "PROJECT"
+            },
+            "example": "PROJECT"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Language code used to create the association. At least one of language or languageId must be provided. languageId is optional and required only for tenants that use custom language variants (for example, Strings). If custom variants are not used, provide only language.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Language code used to create the association. At least one of language or languageId must be provided. languageId is optional and required only for tenants that use custom language variants (for example, Strings). If custom variants are not used, provide only language.",
+              "example": "en-US"
+            },
+            "example": "en-US"
+          },
+          {
+            "name": "languageId",
+            "in": "query",
+            "description": "Language identifier (languageId). At least one of language or languageId must be provided. languageId is optional and required only for tenants that use custom language variants (for example, Strings). If custom variants are not used, provide only language. When languageId is not provided, language is used for the lookup. When both are provided, languageId is used for the lookup.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Language identifier (languageId). At least one of language or languageId must be provided. languageId is optional and required only for tenants that use custom language variants (for example, Strings). If custom variants are not used, provide only language. When languageId is not provided, language is used for the lookup. When both are provided, languageId is used for the lookup.",
+              "example": "en-US"
+            },
+            "example": "en-US"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Style guide association details for the association",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStyleGuideAssociationDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (e.g. missing tenant, at least one of language/languageId required, invalid tenant or entityType). Error codes: VALIDATION_ERROR, INVALID_ARGUMENT, MISSING_REQUEST_PARAMETER.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No style guide association found for the given parameters. Error codes: STYLEGUIDE_ASSOCIATION_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Style guide has no versions (data inconsistency). Error codes: STYLEGUIDE_HAS_NO_VERSION.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/async/update-jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Get update job status",
+        "description": "Returns the current state of a Style Guide update job. HTTP status is always 200; switch on the body\u0027s status field.",
+        "operationId": "getUpdateStyleGuideJobStatus",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job status. When `status` is `FAILED`, the `error.code` field indicates the reason: `DUPLICATE_CONTENT_GROUP_LANGUAGE` (a Style Guide for this language is already linked to the Content Group), `STYLEGUIDE_NOT_FOUND` (style guide was deleted before the job ran), `CONTENT_GROUP_NOT_FOUND` (content group no longer exists), `SYSTEM_CONTENT_GROUP_NOT_ALLOWED` (the Content Group is the \"All Groups\" system group), `SERVICE_UNAVAILABLE` (upstream dependency temporarily unavailable), `STYLE_GUIDE_RULES_EXTRACTION_ERROR` (rules extraction failed), `STYLE_GUIDE_ANALYSIS_ERROR` (AI analysis unavailable), `JOB_CANCELLED` (job was cancelled), `JOB_FAILED` (unexpected worker failure).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateStyleGuideJobStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden — MANAGE right required. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found. Error codes: JOB_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/styleguides/async/create-jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "Style Guide"
+        ],
+        "summary": "Get create job status",
+        "description": "Returns the current state of a Style Guide create job. HTTP status is always 200; switch on the body\u0027s status field.",
+        "operationId": "getCreateStyleGuideJobStatus",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job status. When `status` is `FAILED`, the `error.code` field indicates the reason: `DUPLICATE_CONTENT_GROUP_LANGUAGE` (a Style Guide for this language is already linked to the Content Group), `CONTENT_GROUP_NOT_FOUND` (content group no longer exists), `SYSTEM_CONTENT_GROUP_NOT_ALLOWED` (the Content Group is the \"All Groups\" system group), `SERVICE_UNAVAILABLE` (upstream dependency temporarily unavailable), `STYLE_GUIDE_RULES_EXTRACTION_ERROR` (rules extraction failed), `STYLE_GUIDE_ANALYSIS_ERROR` (AI analysis unavailable), `JOB_CANCELLED` (job was cancelled), `JOB_FAILED` (unexpected worker failure).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateStyleGuideJobStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden — MANAGE right required. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found. Error codes: JOB_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{contentGroupId}/export": {
+      "get": {
+        "tags": [
+          "Rule"
+        ],
+        "summary": "Export a Content Group\u0027s Rules as Markdown",
+        "description": "Exports every Rule in scope as a downloadable Markdown file: a top-level heading\nnaming the Content Group, followed by a single table with columns Rule, Language,\nEnabled, and AI Check. Not paginated or filterable — every Rule in scope is included.\n\nPass a real Content Group ID to export only the Rules linked to that group (directly,\nor via a Rule\u0027s \"linked to all Content Groups\" flag). Pass the sentinel value\n`all-groups` to export only the Rules linked to all Content Groups instead (not\nevery Rule in the organization), backing the \"All Groups\" system Content Group\u0027s\nexport — its heading reads \"All Groups\".\n",
+        "operationId": "exportContentGroupRules",
+        "parameters": [
+          {
+            "name": "contentGroupId",
+            "in": "path",
+            "description": "Content Group ID, or the sentinel value `all-groups`",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "all-groups"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Markdown export returned successfully",
+            "content": {
+              "text/markdown": {}
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions. Error codes: ACCESS_DENIED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Content group not found. Error codes: CONTENT_GROUP_NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ContentGroupResponse": {
+        "type": "object",
+        "description": "Content group reference",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Content group identifier",
+            "example": "my-content-group"
+          }
+        }
+      },
+      "StyleGuideResponse": {
+        "type": "object",
+        "description": "Style Guide information",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the Style Guide",
+            "example": "018e1234-5678-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Style Guide (latest version)",
+            "example": "English Style Guide",
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Style Guide (latest version)",
+            "example": "Style guide for English content",
+            "maxLength": 250
+          },
+          "language": {
+            "$ref": "#/components/schemas/SupportedLanguageResponse",
+            "description": "Language details"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether this is the default Style Guide",
+            "example": false
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/UserInfo",
+            "description": "User who created the Style Guide"
+          },
+          "lastModifiedBy": {
+            "$ref": "#/components/schemas/UserInfo",
+            "description": "User who last modified the Style Guide"
+          },
+          "contentGroup": {
+            "$ref": "#/components/schemas/ContentGroupResponse",
+            "description": "Content group associated with this Style Guide"
+          },
+          "versions": {
+            "type": "array",
+            "description": "List of all versions of this Style Guide. Only present when includeVersions\u003dtrue.",
+            "items": {
+              "$ref": "#/components/schemas/StyleGuideVersionResponse"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the Style Guide was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the Style Guide was last modified",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "extractedRulesCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of rules extracted and linked to the content group during this create/update operation. Only present for create/update responses when a content group is set; absent otherwise.",
+            "example": 25
+          }
+        }
+      },
+      "StyleGuideVersionResponse": {
+        "type": "object",
+        "description": "Style Guide version information",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the version",
+            "example": "018e1234-5678-7890-abcd-ef1234567890"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Version number",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the version",
+            "example": "English Style Guide v1",
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the version",
+            "example": "Initial version of the style guide",
+            "maxLength": 250
+          },
+          "changeNotes": {
+            "type": "string",
+            "description": "Notes about what changed in this version",
+            "example": "Updated grammar rules and added new terminology"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "File name",
+            "example": "StyleGuide.md"
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "description": "File size in bytes",
+            "example": 1024
+          },
+          "fileType": {
+            "type": "string",
+            "description": "File MIME type",
+            "example": "text/markdown"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the version was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the version was last modified",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastModifiedBy": {
+            "$ref": "#/components/schemas/UserInfo",
+            "description": "User who last modified the version"
+          },
+          "contentGroup": {
+            "$ref": "#/components/schemas/ContentGroupResponse",
+            "description": "Content group associated with this version"
+          }
+        }
+      },
+      "SupportedLanguageResponse": {
+        "type": "object",
+        "description": "Supported Style Guide language",
+        "properties": {
+          "bcpCode": {
+            "type": "string",
+            "description": "Language code in BCP-47 format (more specifically RFC 5646 format)",
+            "example": "en-GB"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable language name in English",
+            "example": "English (United Kingdom)"
+          },
+          "region": {
+            "type": "string",
+            "description": "Region code, or null if not present",
+            "example": "gb"
+          },
+          "script": {
+            "type": "string",
+            "description": "Script code when defined, or null",
+            "enum": [
+              "ARAB",
+              "ARMN",
+              "BENG",
+              "CANS",
+              "CYRL",
+              "DEVA",
+              "GREK",
+              "GURU",
+              "HANG",
+              "HANS",
+              "HANT",
+              "HEBR",
+              "HMNG",
+              "JPAN",
+              "KHMR",
+              "LAOO",
+              "LATN",
+              "MONG",
+              "MTEI",
+              "MYMR",
+              "OLCK",
+              "ORYA",
+              "PIQD",
+              "ROHG",
+              "SIND",
+              "SYRC",
+              "TAML",
+              "TFNG",
+              "TELU"
+            ],
+            "example": "LATN"
+          },
+          "language": {
+            "type": "string",
+            "description": "ISO 639-1 language code (e.g., \u0027cs\u0027 from \u0027cs-CZ\u0027)",
+            "example": "cs"
+          }
+        },
+        "required": [
+          "bcpCode",
+          "description",
+          "language"
+        ]
+      },
+      "UserInfo": {
+        "type": "object",
+        "description": "User information",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User identifier",
+            "example": "0015oCjtouINgRCDIvQtjo"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username",
+            "example": "john.doe"
+          },
+          "fullName": {
+            "type": "string",
+            "description": "Full name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "example": "john.doe@example.com"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "Avatar URL",
+            "example": "https://example.com/avatars/john-doe.png"
+          }
+        }
+      },
+      "StyleGuideAsyncAcceptedResponse": {
+        "type": "object",
+        "description": "Accepted response for an async Style Guide operation",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "description": "Job identifier; use this to poll the job-status endpoint",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          }
+        },
+        "required": [
+          "jobId"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "ListStyleGuidesRequest": {
+        "type": "object",
+        "description": "Request parameters for listing Style Guides",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Search filter for Style Guide name (case-insensitive partial match)",
+            "example": "guide"
+          },
+          "languages": {
+            "type": "array",
+            "description": "Filter by languages (multi-valued). Each language must be a supported Style Guide language (e.g., en, en-GB)",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "contentGroupIds": {
+            "type": "array",
+            "description": "Filter by content group IDs (multi-valued). An empty or omitted list matches all content groups.",
+            "example": [
+              "cg-marketing-en"
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 36,
+              "minLength": 0
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "lastModifiedFrom": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Filter by last modified date - from (inclusive)",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "lastModifiedTo": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Filter by last modified date - to (inclusive)",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Filter by default status",
+            "example": true
+          },
+          "lastModifiedBy": {
+            "type": "array",
+            "description": "Filter by last modified by user IDs (multi-valued)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Search filter for Style Guide description (case-insensitive partial match)",
+            "example": "branding"
+          },
+          "sortBy": {
+            "type": "string",
+            "description": "Sort field: name, language, or lastModifiedAt",
+            "enum": [
+              "name",
+              "language",
+              "lastModifiedAt"
+            ],
+            "example": "name"
+          },
+          "sortDirection": {
+            "type": "string",
+            "description": "Sort direction: ASC or DESC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "example": "ASC"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number (0-indexed)",
+            "example": 0,
+            "minimum": 0
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page size",
+            "example": 20,
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      },
+      "StyleGuideListItem": {
+        "type": "object",
+        "description": "Style Guide summary information",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the Style Guide",
+            "example": "018e1234-5678-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Style Guide (latest version)",
+            "example": "English Style Guide",
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Style Guide (latest version)",
+            "example": "Style guide for English content",
+            "maxLength": 250
+          },
+          "language": {
+            "$ref": "#/components/schemas/SupportedLanguageResponse",
+            "description": "Language details"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether this is the default Style Guide",
+            "example": false
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/UserInfo",
+            "description": "User who created the Style Guide"
+          },
+          "lastModifiedBy": {
+            "$ref": "#/components/schemas/UserInfo",
+            "description": "User who last modified the Style Guide"
+          },
+          "contentGroup": {
+            "$ref": "#/components/schemas/ContentGroupResponse",
+            "description": "Content group associated with this Style Guide"
+          },
+          "rulesCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of rules defined in this Style Guide",
+            "example": 12
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the Style Guide was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the Style Guide was last modified",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        }
+      },
+      "StyleGuideListPage": {
+        "type": "object",
+        "description": "Paginated list of Style Guide summaries",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StyleGuideListItem"
+            }
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of elements matching the query (filtered count)"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Total number of pages"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Current page number (0-indexed)"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page size"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of elements in the current page"
+          }
+        }
+      },
+      "CreateRuleRequest": {
+        "type": "object",
+        "description": "Request to create a new Rule",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "description": "Rule text",
+            "example": "Avoid passive voice in all user-facing content.",
+            "maxLength": 450,
+            "minLength": 0
+          },
+          "allContentGroups": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, this rule applies to all content groups and contentGroupIds must be absent or empty. When false (default), contentGroupIds must be provided and non-empty.",
+            "example": false
+          },
+          "contentGroupIds": {
+            "type": "array",
+            "description": "Content Group IDs this rule applies to. Must be non-empty when allContentGroups is false. Must be absent or empty when allContentGroups is true.",
+            "items": {
+              "type": "string",
+              "maxLength": 36,
+              "minLength": 0
+            },
+            "maxItems": 100,
+            "minItems": 0
+          },
+          "allLanguages": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, this rule applies to all languages and languages must be absent or empty. When false (default), languages must be provided and non-empty.",
+            "example": false
+          },
+          "languages": {
+            "type": "array",
+            "description": "Language codes this rule applies to (e.g., en, en-GB). Equivalent representations such as en_US are accepted and normalised to canonical BCP-47 (en-US). Must be non-empty when allLanguages is false. Must be absent or empty when allLanguages is true.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 100,
+            "minItems": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether this rule is active. When omitted, the service decides based on remaining room under the active-rule limit for the rule\u0027s Content Group(s) and Language(s).",
+            "example": true
+          },
+          "aiCheckEnabled": {
+            "type": "boolean",
+            "description": "Whether this rule is used during AI-powered quality checks. When omitted on an active rule, the service decides based on remaining room under the AI-check limit.",
+            "example": true
+          }
+        },
+        "required": [
+          "rule"
+        ]
+      },
+      "ContentGroupDetails": {
+        "type": "object",
+        "description": "Content Group reference",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Content Group ID",
+            "example": "cg-marketing-en"
+          }
+        }
+      },
+      "RuleResponse": {
+        "type": "object",
+        "description": "Rule details",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for this Rule",
+            "example": "01900000-0000-7000-8000-000000000001"
+          },
+          "rule": {
+            "type": "string",
+            "description": "The rule text",
+            "example": "Avoid passive voice in all user-facing content."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A short, system-generated name indicating this rule\u0027s purpose. Never user-entered; automatically generated, so it may be absent shortly after the rule is created.",
+            "example": "No passive voice"
+          },
+          "omittedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reason this rule is omitted from AI checks, as determined by an automated eligibility check. Absent if the rule is eligible, or if the check hasn\u0027t completed yet."
+          },
+          "eligibilityCheckedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the automated AI-check eligibility check last completed for this rule. Null means it hasn\u0027t run yet: eligibility is still pending, so a client should treat the AI-check state as \u0027checking\u0027 rather than eligible. Once set, a null omittedReason means eligible and a non-null omittedReason means omitted.",
+            "example": "2024-06-01T14:22:05Z"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether this rule is active"
+          },
+          "aiCheckEnabled": {
+            "type": "boolean",
+            "description": "Whether this rule is used during AI-powered quality checks"
+          },
+          "allContentGroups": {
+            "type": "boolean",
+            "description": "Whether this rule applies to all content groups"
+          },
+          "allLanguages": {
+            "type": "boolean",
+            "description": "Whether this rule applies to all languages"
+          },
+          "styleGuide": {
+            "type": "null",
+            "$ref": "#/components/schemas/StyleGuideDetails",
+            "description": "Style Guide this rule was extracted from. Null when the rule is unlinked — either manually created or subsequently edited."
+          },
+          "contentGroups": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Content Groups this rule applies to. Empty list means all content groups. Null means no content groups are assigned.",
+            "items": {
+              "$ref": "#/components/schemas/ContentGroupDetails"
+            }
+          },
+          "languages": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Language details for languages this rule applies to. Empty list means all languages. Null means no languages are assigned.",
+            "items": {
+              "$ref": "#/components/schemas/SupportedLanguageResponse"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this rule was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this rule was last modified",
+            "example": "2024-06-01T14:22:00Z"
+          },
+          "createdBy": {
+            "type": "null",
+            "$ref": "#/components/schemas/UserReference",
+            "description": "User who created this rule"
+          },
+          "lastModifiedBy": {
+            "type": "null",
+            "$ref": "#/components/schemas/UserReference",
+            "description": "User who last modified this rule"
+          }
+        },
+        "required": [
+          "active",
+          "aiCheckEnabled",
+          "allContentGroups",
+          "allLanguages",
+          "contentGroups",
+          "createdAt",
+          "id",
+          "languages",
+          "lastModifiedAt",
+          "rule"
+        ]
+      },
+      "StyleGuideDetails": {
+        "type": "object",
+        "description": "Style Guide reference",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Style Guide ID",
+            "example": "01900000-0000-7000-8000-000000000002"
+          },
+          "name": {
+            "type": "string",
+            "description": "Style Guide name",
+            "example": "English Style Guide"
+          },
+          "contentGroupId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The Content Group this Style Guide is scoped to. Null if the Style Guide isn\u0027t scoped to a specific Content Group.",
+            "example": "01900000-0000-7000-8000-000000000003"
+          },
+          "language": {
+            "type": "string",
+            "description": "The language this Style Guide is scoped to.",
+            "example": "en-US"
+          }
+        },
+        "required": [
+          "id",
+          "language",
+          "name"
+        ]
+      },
+      "UserReference": {
+        "type": "object",
+        "description": "User reference",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User ID",
+            "example": "01900000-0000-7000-8000-000000000003"
+          }
+        }
+      },
+      "ListRulesRequest": {
+        "type": "object",
+        "description": "Request parameters for listing Rules",
+        "properties": {
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number (0-indexed)",
+            "example": 0,
+            "minimum": 0
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page size (1–100)",
+            "example": 20,
+            "maximum": 100,
+            "minimum": 1
+          },
+          "sortBy": {
+            "type": "string",
+            "description": "Sort field",
+            "enum": [
+              "createdAt",
+              "rule",
+              "source",
+              "contentGroupCounts",
+              "languageCounts"
+            ],
+            "example": "createdAt"
+          },
+          "sortDirection": {
+            "type": "string",
+            "description": "Sort direction",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "example": "DESC"
+          },
+          "contentGroupIds": {
+            "type": "array",
+            "description": "Filter by content group IDs (multi-valued). An empty list matches all content groups.",
+            "example": [
+              "cg-marketing-en"
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "languages": {
+            "type": "array",
+            "description": "Filter by language codes (multi-valued, exact match). Equivalent representations such as en_US are accepted and normalised to canonical BCP-47 (en-US). An empty list matches all languages.",
+            "example": [
+              "en-GB"
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "includeGlobalRules": {
+            "type": "boolean",
+            "description": "When true, rules linked to all content groups or all languages (global rules) are included in addition to any explicit contentGroupIds/languages filter matches. If contentGroupIds is omitted, this instead restricts results to globally-scoped rules (linked to all content groups or all languages) rather than adding to an unset filter. See includeGlobalLanguageRules for including all-languages rules without that content-group-axis restriction when contentGroupIds is omitted.",
+            "example": true
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Filter by active status.",
+            "example": true
+          },
+          "aiCheckEnabled": {
+            "type": "boolean",
+            "description": "Filter by AI-check-enabled status.",
+            "example": true
+          },
+          "styleGuideIds": {
+            "type": "array",
+            "description": "Filter by Style Guide IDs (multi-valued). Rules not linked to any Style Guide are excluded when this filter is set. If omitted or empty, this filter is not applied.",
+            "example": [
+              "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "lastModifiedBy": {
+            "type": "array",
+            "description": "Filter by last-modified-by user account IDs (multi-valued). If omitted or empty, this filter is not applied.",
+            "example": [
+              "5efc4feca115ac0bb5321917"
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "ruleText": {
+            "type": "string",
+            "description": "Filter by rule text (case-insensitive contains match).",
+            "example": "Oxford comma",
+            "maxLength": 450,
+            "minLength": 0
+          },
+          "includeGlobalLanguageRules": {
+            "type": "boolean",
+            "description": "When true, rules linked to all languages are included in addition to any explicit languages filter matches. Unlike includeGlobalRules, this has no effect on content-group filtering: it never restricts results when contentGroupIds is omitted, making it safe for callers that want all-languages rules included without also restricting to globally-scoped-only content groups.",
+            "example": true
+          }
+        }
+      },
+      "RuleListPage": {
+        "type": "object",
+        "description": "Paginated list of Rules",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleResponse"
+            }
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of rules matching the query"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Total number of pages"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Current page number (0-indexed)"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page size"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of rules in the current page"
+          }
+        },
+        "required": [
+          "content",
+          "numberOfElements",
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "BulkUpdateRulesRequest": {
+        "type": "object",
+        "description": "Request to bulk-enable or bulk-disable Rules",
+        "properties": {
+          "ruleIds": {
+            "type": "array",
+            "description": "Rule IDs to enable/disable, in the order they should be processed",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "true to enable the listed Rules, false to disable them"
+          }
+        },
+        "required": [
+          "active",
+          "ruleIds"
+        ]
+      },
+      "BulkUpdateRulesResponse": {
+        "type": "object",
+        "description": "Result of a bulk enable/disable Rules operation",
+        "properties": {
+          "updatedCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of Rules successfully enabled/disabled"
+          },
+          "failures": {
+            "type": "array",
+            "description": "Rules that could not be enabled/disabled",
+            "items": {
+              "$ref": "#/components/schemas/RuleBulkOperationFailure"
+            }
+          }
+        },
+        "required": [
+          "failures",
+          "updatedCount"
+        ]
+      },
+      "RuleBulkOperationFailure": {
+        "type": "object",
+        "description": "A single Rule that failed within a bulk operation",
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Rule ID that could not be processed"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Error code indicating the failure reason",
+            "enum": [
+              "RULE_NOT_FOUND",
+              "RULE_ACTIVE_LIMIT_REACHED",
+              "RULE_DELETION_FAILED"
+            ]
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Human-readable error message"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "ruleId"
+        ]
+      },
+      "UpdateRuleRequest": {
+        "type": "object",
+        "description": "Request to update an existing Rule. Only fields that are present (non-null) in the JSON body are applied.",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "description": "Updated rule text. Changing it would unlink the rule from its Style Guide; set forceUnlink\u003dtrue to confirm, otherwise the request fails with 409 CONFLICT.",
+            "example": "Avoid passive voice in all user-facing content.",
+            "maxLength": 450,
+            "minLength": 0
+          },
+          "allContentGroups": {
+            "type": "boolean",
+            "description": "When true, this rule applies to all content groups and contentGroupIds must be absent or empty. When false, contentGroupIds must be provided and non-empty. Null \u003d no change. Any change to the content group scope of a rule linked to a Style Guide would unlink it; set forceUnlink\u003dtrue to confirm, otherwise the request fails with 409 CONFLICT."
+          },
+          "contentGroupIds": {
+            "type": "array",
+            "description": "Complete replacement of the Content Group IDs this rule applies to. Null \u003d no change. Must be non-empty when allContentGroups is false; must be absent or empty when allContentGroups is true. Any previously set IDs not included here are removed. Any change to the content group scope of a rule linked to a Style Guide would unlink it; set forceUnlink\u003dtrue to confirm, otherwise the request fails with 409 CONFLICT.",
+            "items": {
+              "type": "string",
+              "maxLength": 36,
+              "minLength": 0
+            },
+            "maxItems": 100,
+            "minItems": 0
+          },
+          "allLanguages": {
+            "type": "boolean",
+            "description": "When true, this rule applies to all languages and languages must be absent or empty. When false, languages must be provided and non-empty. Null \u003d no change. Any change to the language scope of a rule linked to a Style Guide would unlink it; set forceUnlink\u003dtrue to confirm, otherwise the request fails with 409 CONFLICT."
+          },
+          "languages": {
+            "type": "array",
+            "description": "Complete replacement of the language codes this rule applies to. Equivalent representations such as en_US are accepted and normalised to canonical BCP-47 (en-US). Null \u003d no change. Must be non-empty when allLanguages is false; must be absent or empty when allLanguages is true. Any previously set codes not included here are removed. Any change to the language scope of a rule linked to a Style Guide would unlink it; set forceUnlink\u003dtrue to confirm, otherwise the request fails with 409 CONFLICT.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 100,
+            "minItems": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether this rule is active. Null \u003d no change."
+          },
+          "aiCheckEnabled": {
+            "type": "boolean",
+            "description": "Whether this rule is used during AI-powered quality checks. Null \u003d no change."
+          },
+          "forceUnlink": {
+            "type": "boolean",
+            "default": false,
+            "description": "Confirms that this update may unlink the rule from its currently linked Style Guide. Required (must be true) when a change to rule text, content group scope, or language scope would cause an unlink; otherwise the request fails with 409 CONFLICT and no changes are applied. Default: false."
+          }
+        }
+      },
+      "PublicStyleGuideAssociationDetails": {
+        "type": "object",
+        "description": "Details of a single Style Guide association: language, style guide, association id, timestamps, and audit fields.",
+        "properties": {
+          "language": {
+            "type": "string",
+            "description": "Language code (BCP 47 or custom)",
+            "example": "en-US"
+          },
+          "languageId": {
+            "type": "string",
+            "description": "Language ID (same as request or derived from language code). languageId is optional in request inputs and required only for tenants that use custom language variants (for example, Strings). If custom variants are not used, callers provide language and language is used as the effective language ID.",
+            "example": "en-US"
+          },
+          "styleGuide": {
+            "$ref": "#/components/schemas/PublicStyleGuideInfo",
+            "description": "Associated Style Guide (id, name, description, language, version)."
+          },
+          "associationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the association (UUID v7). Null when this response was resolved via the organization\u0027s default Style Guide rather than an explicit association."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the association was created. Null when this response was resolved via the organization\u0027s default Style Guide.",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the association was last modified. Null when this response was resolved via the organization\u0027s default Style Guide.",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User ID of the user who created the association. Null when this response was resolved via the organization\u0027s default Style Guide."
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "User ID of the user who last modified the association. Null when this response was resolved via the organization\u0027s default Style Guide."
+          }
+        }
+      },
+      "PublicStyleGuideInfo": {
+        "type": "object",
+        "description": "Summary of the associated Style Guide (id, name, description, language, versionId, versionNumber).",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier of the Style Guide",
+            "example": "018e1234-5678-7890-abcd-ef1234567890"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Style Guide",
+            "example": "English Style Guide",
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Style Guide",
+            "example": "Style guide for English content",
+            "maxLength": 250
+          },
+          "language": {
+            "$ref": "#/components/schemas/SupportedLanguageResponse",
+            "description": "Language details"
+          },
+          "versionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the Style Guide version used.",
+            "example": "018e1234-5678-7890-abcd-ef1234567891"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Style Guide version number.",
+            "example": 2
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether this Style Guide is the default for the organization.",
+            "example": true
+          },
+          "latestVersionNumber": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The latest version number of the Style Guide.",
+            "example": 3
+          }
+        }
+      },
+      "UpdateStyleGuideJobStatusResponse": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "result": {
+            "$ref": "#/components/schemas/StyleGuideResponse"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorResponse"
+          }
+        }
+      },
+      "CreateStyleGuideJobStatusResponse": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "result": {
+            "$ref": "#/components/schemas/StyleGuideResponse"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorResponse"
+          }
+        }
+      },
+      "DeleteStyleGuidesRequest": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "ids"
+        ]
+      },
+      "DeleteStyleGuidesResponse": {
+        "type": "object",
+        "properties": {
+          "deletedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FailedDeletion"
+            }
+          }
+        }
+      },
+      "FailedDeletion": {
+        "type": "object",
+        "description": "A single failed Style Guide deletion",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Style Guide ID that could not be deleted"
+          },
+          "name": {
+            "type": "string",
+            "description": "Style Guide name when available (null if not found)"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Error code indicating the failure reason",
+            "enum": [
+              "STYLEGUIDE_NOT_FOUND",
+              "STYLEGUIDE_DELETION_FAILED"
+            ]
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Human-readable error message"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "id"
+        ]
+      },
+      "BulkDeleteRulesRequest": {
+        "type": "object",
+        "description": "Request to bulk-delete Rules",
+        "properties": {
+          "ruleIds": {
+            "type": "array",
+            "description": "Rule IDs to permanently delete",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "ruleIds"
+        ]
+      },
+      "BulkDeleteRulesResponse": {
+        "type": "object",
+        "description": "Result of a bulk delete Rules operation",
+        "properties": {
+          "deletedCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of Rules permanently deleted"
+          },
+          "failures": {
+            "type": "array",
+            "description": "Rules that could not be deleted",
+            "items": {
+              "$ref": "#/components/schemas/RuleBulkOperationFailure"
+            }
+          }
+        },
+        "required": [
+          "deletedCount",
+          "failures"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "description": "JWT from IDM (Authorization: Bearer \u003ctoken\u003e)",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -1,0 +1,4704 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Studio API",
+    "description": "API for creating projects and reading transcription, translation, and dubbing results.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.studio.us.phrase.com",
+      "description": "Production US Environment"
+    },
+    {
+      "url": "https://api.studio.eu.phrase.com",
+      "description": "Production EU Environment"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Projects",
+      "description": "Manage transcription, translation, and dubbing projects"
+    },
+    {
+      "name": "Recordings",
+      "description": "Access recording status and output data"
+    },
+    {
+      "name": "Subtitle Profiles",
+      "description": "Manage subtitle formatting profiles"
+    },
+    {
+      "name": "Pronunciations",
+      "description": "Manage custom pronunciation rules"
+    },
+    {
+      "name": "Glossaries",
+      "description": "Manage translation glossaries"
+    },
+    {
+      "name": "Insights",
+      "description": "Manage AI-powered insight prompts"
+    },
+    {
+      "name": "Safe Communications",
+      "description": "Access safe communication evaluation templates"
+    },
+    {
+      "name": "Subtitles",
+      "description": "Write subtitle segments for a recording"
+    }
+  ],
+  "paths": {
+    "/v1/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "List Projects",
+        "description": "Retrieve a list of projects for the authenticated account.",
+        "operationId": "listProjects",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter by project status.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ALL",
+                "ARCHIVED",
+                "PENDING",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "FAILED"
+              ],
+              "default": "ALL"
+            }
+          },
+          {
+            "name": "teamProjects",
+            "in": "query",
+            "required": false,
+            "description": "When true, list team projects — projects shared with you, plus projects made public within your organization (this includes your own public projects). Your own private (unshared) projects are not team projects and are not returned when this flag is set; use the default listing (flag omitted) to retrieve them.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Free-text search in project name.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number (min 1).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "Items per page (1-1000).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projects retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Array of projects",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Project ID",
+                            "example": "01jzmvc20cjq5hj5saa96ttp2x"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Project name",
+                            "example": "Meeting Recording"
+                          },
+                          "firstRecordingId": {
+                            "type": "string",
+                            "description": "First recording ID"
+                          },
+                          "sourceLanguage": {
+                            "type": "string",
+                            "description": "Source language code"
+                          },
+                          "subtitleProfileId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Subtitle profile ID"
+                          },
+                          "mediaType": {
+                            "type": "string",
+                            "enum": [
+                              "AUDIO",
+                              "VIDEO",
+                              "AUDIO_VIDEO"
+                            ],
+                            "description": "Project media type"
+                          },
+                          "duration": {
+                            "type": "number",
+                            "description": "Total duration in seconds"
+                          },
+                          "fileCount": {
+                            "type": "number",
+                            "description": "Number of files in project"
+                          },
+                          "owner": {
+                            "type": "string",
+                            "description": "Owner user or team name"
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "description": "Account ID"
+                          },
+                          "archived": {
+                            "type": "boolean",
+                            "description": "Whether project is archived"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "ARCHIVED",
+                              "PENDING",
+                              "IN_PROGRESS",
+                              "COMPLETED",
+                              "FAILED"
+                            ],
+                            "description": "Current project status",
+                            "example": "IN_PROGRESS"
+                          },
+                          "recordingTypes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "TRANSCRIPTION",
+                                "TRANSLATION",
+                                "DUBBING",
+                                "SUMMARY"
+                              ]
+                            }
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Project creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Project last update timestamp"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "status",
+                          "createdAt",
+                          "updatedAt"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "pageSize",
+                        "total",
+                        "totalPages"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid query parameters)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_query": {
+                    "summary": "Invalid query",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Access denied",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Create Project",
+        "description": "Creates an empty project and redirects the client to the upload service to upload files. After upload completion, the service will finalize the project automatically. Direct file uploads are more robust and recommended over providing fileUrls.\n\nThis endpoint does not accept translation or dubbing languages — a project is created transcription-only. Once transcription completes, call `POST /v1/projects/{projectId}/recordings/{recordingId}/translate` to add translation languages, then `POST /v1/projects/{projectId}/recordings/{recordingId}/dubbing` to add dubbing languages.\n\nUpload behavior and limits:\n- 10-minute inactivity timeout per upload stream.\n- If the client connection drops, the upload is aborted and cannot resume; retry from the start.\n- Multi-hour uploads are supported as long as data keeps flowing and the connection stays open.",
+        "operationId": "createProject",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "required": false,
+            "description": "Project title",
+            "schema": {
+              "type": "string",
+              "default": "Untitled Project"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sourceLanguage": {
+                    "type": "string",
+                    "description": "Source language code — the language actually spoken in the recording. Always specify one explicitly.",
+                    "enum": [
+                      "am",
+                      "ar",
+                      "as",
+                      "az",
+                      "ba",
+                      "bg",
+                      "br",
+                      "ca",
+                      "cs",
+                      "cy",
+                      "da",
+                      "de",
+                      "el",
+                      "en",
+                      "es",
+                      "et",
+                      "eu",
+                      "fa",
+                      "fi",
+                      "fo",
+                      "fr",
+                      "gu",
+                      "ha",
+                      "he",
+                      "hi",
+                      "hu",
+                      "hy",
+                      "id",
+                      "is",
+                      "it",
+                      "ja",
+                      "jw",
+                      "ka",
+                      "kk",
+                      "km",
+                      "kn",
+                      "ko",
+                      "la",
+                      "lb",
+                      "lv",
+                      "ml",
+                      "mn",
+                      "mr",
+                      "mt",
+                      "ne",
+                      "nl",
+                      "nn",
+                      "no",
+                      "pa",
+                      "pl",
+                      "ps",
+                      "pt",
+                      "ro",
+                      "ru",
+                      "si",
+                      "sk",
+                      "sl",
+                      "sq",
+                      "sr",
+                      "su",
+                      "sv",
+                      "sw",
+                      "ta",
+                      "te",
+                      "th",
+                      "tl",
+                      "tr",
+                      "tt",
+                      "uk",
+                      "ur",
+                      "uz",
+                      "vi",
+                      "yue",
+                      "zh"
+                    ]
+                  },
+                  "subtitleProfiles": {
+                    "description": "Array of subtitle profile selections. In multipart, provide this as a JSON array string.",
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CreateProjectSubtitleProfile"
+                    }
+                  },
+                  "summary": {
+                    "type": "boolean",
+                    "description": "Enable summary generation"
+                  },
+                  "customAttributes": {
+                    "type": "boolean",
+                    "description": "Enable custom attributes extraction"
+                  },
+                  "insights": {
+                    "description": "Requested insight IDs (UUID v4). Provide as JSON array or JSON string.",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "glossary": {
+                    "description": "Glossary configuration (JSON object or JSON string). When provided as an object in multipart form, use JSON string representation.",
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Existing glossary ID to use for the project"
+                          },
+                          "content": {
+                            "type": "string",
+                            "description": "Glossary content as newline-separated terms (e.g., 'term1\\nterm2\\nterm3')"
+                          }
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "safeCommunications": {
+                    "description": "Safe communication IDs (UUID v4). Provide as JSON array or JSON string.",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "pronunciations": {
+                    "description": "Pronunciations to apply. In multipart, provide as JSON array string.",
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CreateProjectPronunciation"
+                    }
+                  },
+                  "fileUrls": {
+                    "description": "External file URLs to import. Provide as JSON array or JSON string. If provided, uploaded files in this request are ignored for processing (but still count towards the 5-item limit).",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "files": {
+                    "description": "One or more files to upload (max 5 total across files + fileUrls). Ignored for processing when fileUrls are provided (but still count towards the limit).",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "sourceLanguage",
+                  "subtitleProfiles"
+                ]
+              },
+              "examples": {
+                "direct_upload": {
+                  "summary": "Direct file upload (full request example)",
+                  "value": {
+                    "sourceLanguage": "en",
+                    "subtitleProfiles": [
+                      {
+                        "subtitleProfileId": "00000000-0000-0000-0000-000000000001",
+                        "languageCode": "en"
+                      }
+                    ],
+                    "summary": false,
+                    "customAttributes": true,
+                    "insights": [
+                      "00000000-0000-0000-0000-000000000002",
+                      "00000000-0000-0000-0000-000000000003"
+                    ],
+                    "glossary": {
+                      "id": "00000000-0000-0000-0000-000000000004",
+                      "content": "term1\\nterm2\\nterm3"
+                    },
+                    "safeCommunications": [
+                      "00000000-0000-0000-0000-000000000005",
+                      "00000000-0000-0000-0000-000000000006"
+                    ],
+                    "pronunciations": [
+                      {
+                        "pronunciationId": "00000000-0000-0000-0000-000000000007",
+                        "languageCode": "en"
+                      }
+                    ]
+                  }
+                },
+                "url_import": {
+                  "summary": "Import from external URLs (full request example)",
+                  "value": {
+                    "sourceLanguage": "en",
+                    "subtitleProfiles": [
+                      {
+                        "subtitleProfileId": "00000000-0000-0000-0000-000000000001",
+                        "languageCode": "en"
+                      }
+                    ],
+                    "summary": false,
+                    "customAttributes": true,
+                    "insights": [
+                      "00000000-0000-0000-0000-000000000002",
+                      "00000000-0000-0000-0000-000000000003"
+                    ],
+                    "glossary": {
+                      "id": "00000000-0000-0000-0000-000000000004",
+                      "content": "term1\\nterm2\\nterm3"
+                    },
+                    "safeCommunications": [
+                      "00000000-0000-0000-0000-000000000005",
+                      "00000000-0000-0000-0000-000000000006"
+                    ],
+                    "pronunciations": [
+                      {
+                        "pronunciationId": "00000000-0000-0000-0000-000000000007",
+                        "languageCode": "en"
+                      }
+                    ],
+                    "fileUrls": [
+                      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload accepted and project initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Project ID"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                },
+                "examples": {
+                  "ok_by_uploads": {
+                    "summary": "Success (direct uploads)",
+                    "value": {
+                      "id": "01jzmvc20cjq5hj5saa96ttp2x"
+                    }
+                  },
+                  "ok_by_file_urls": {
+                    "summary": "Success (fileUrls)",
+                    "value": {
+                      "id": "01jzmvc20cjq5hj5saa96ttp2x"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "307": {
+            "description": "Redirect to external upload service",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "description": "URL to redirect to for file upload"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "no_files": {
+                    "summary": "No files provided (redirect endpoint)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "There are no files",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "malformed_multipart": {
+                    "summary": "Malformed multipart payload (upload service)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Malformed multipart payload",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "validation_failed": {
+                    "summary": "Validation failed (upload service)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Validation failed",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "max_files": {
+                    "summary": "Too many files (upload service)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Maximum 5 files allowed",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "max_files_combined": {
+                    "summary": "Too many total inputs (upload service)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Maximum 5 files allowed (uploads + fileUrls)",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "at_least_one": {
+                    "summary": "No files or URLs (upload service)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "At least one file must be provided (file uploads or fileUrls)",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "upload_failed": {
+                    "summary": "Upload failed (generic)",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Upload failed",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "file_too_large": {
+                    "summary": "Max size exceeded per file",
+                    "value": {
+                      "success": false,
+                      "statusCode": 413,
+                      "message": "File too large. Max size is 5GB per file",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unsupported_content_type": {
+                    "summary": "Content-Type must be multipart/form-data",
+                    "value": {
+                      "success": false,
+                      "statusCode": 415,
+                      "message": "Content-Type must be multipart/form-data",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway (error calling start endpoint)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "start_error": {
+                    "summary": "Error calling start endpoint",
+                    "value": {
+                      "success": false,
+                      "statusCode": 502,
+                      "message": "Error calling start endpoint",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "upload_service_unavailable": {
+                    "summary": "Upload service not configured",
+                    "value": {
+                      "success": false,
+                      "statusCode": 503,
+                      "message": "Single-shot upload URL is not configured",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{id}": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Get Project Details",
+        "description": "Retrieve detailed information about a specific project",
+        "operationId": "getProjectDetails",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Project ID",
+                      "example": "01jzmvc20cjq5hj5saa96ttp2x"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Project name",
+                      "example": "Meeting Recording"
+                    },
+                    "firstRecordingId": {
+                      "type": "string",
+                      "description": "First recording ID"
+                    },
+                    "sourceLanguage": {
+                      "type": "string",
+                      "description": "Source language code"
+                    },
+                    "subtitleProfileId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Subtitle profile ID"
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "enum": [
+                        "AUDIO",
+                        "VIDEO",
+                        "AUDIO_VIDEO"
+                      ],
+                      "description": "Project media type"
+                    },
+                    "duration": {
+                      "type": "number",
+                      "description": "Total duration in seconds"
+                    },
+                    "fileCount": {
+                      "type": "number",
+                      "description": "Number of files in project"
+                    },
+                    "owner": {
+                      "type": "string",
+                      "description": "Owner user or team name"
+                    },
+                    "accountId": {
+                      "type": "string",
+                      "description": "Account ID"
+                    },
+                    "archived": {
+                      "type": "boolean",
+                      "description": "Whether project is archived"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ARCHIVED",
+                        "PENDING",
+                        "IN_PROGRESS",
+                        "COMPLETED",
+                        "FAILED"
+                      ],
+                      "description": "Current project status",
+                      "example": "IN_PROGRESS"
+                    },
+                    "recordingTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "TRANSCRIPTION",
+                          "TRANSLATION",
+                          "DUBBING",
+                          "SUMMARY"
+                        ]
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Project creation timestamp"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Project last update timestamp"
+                    },
+                    "recordings": {
+                      "type": "array",
+                      "description": "Recordings within the project",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Recording ID"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "description": "Project ID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Recording name"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "File MIME type"
+                          },
+                          "extension": {
+                            "type": "string",
+                            "description": "File extension"
+                          },
+                          "sourceLanguage": {
+                            "type": "string",
+                            "description": "Source language code"
+                          },
+                          "translationLanguages": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Target translation languages"
+                          },
+                          "dubbingLanguages": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Target dubbing languages"
+                          },
+                          "summaryEnabled": {
+                            "type": "boolean",
+                            "description": "Whether summary is enabled"
+                          },
+                          "customAttributesEnabled": {
+                            "type": "boolean",
+                            "description": "Whether custom attributes are enabled"
+                          },
+                          "insightsEnabled": {
+                            "type": "boolean",
+                            "description": "Whether insights are enabled"
+                          },
+                          "safeCommunicationsEnabled": {
+                            "type": "boolean",
+                            "description": "Whether safe communications are enabled"
+                          },
+                          "duration": {
+                            "type": "number",
+                            "description": "Recording duration in seconds"
+                          },
+                          "sourceDuration": {
+                            "type": "number",
+                            "description": "Original source duration in seconds"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Recording creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Recording last update timestamp"
+                          }
+                        }
+                      }
+                    },
+                    "glossary": {
+                      "type": "object",
+                      "description": "Glossary configuration for the project (if any)",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "Glossary ID"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Glossary name"
+                        },
+                        "items": {
+                          "type": "string",
+                          "description": "Glossary items (newline-separated)"
+                        },
+                        "additionalItems": {
+                          "type": "string",
+                          "description": "Additional glossary items"
+                        }
+                      }
+                    },
+                    "pronunciations": {
+                      "type": "array",
+                      "description": "Pronunciations applied to the project",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Pronunciation set ID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Pronunciation set name"
+                          },
+                          "languageCode": {
+                            "type": "string",
+                            "description": "Language code for this pronunciation set"
+                          },
+                          "items": {
+                            "type": "array",
+                            "description": "Pronunciation pairs",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "source": {
+                                  "type": "string",
+                                  "description": "Source word/phrase"
+                                },
+                                "target": {
+                                  "type": "string",
+                                  "description": "Target pronunciation"
+                                }
+                              },
+                              "required": [
+                                "source",
+                                "target"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "languageCode",
+                          "items"
+                        ]
+                      }
+                    },
+                    "safeCommunications": {
+                      "type": "array",
+                      "description": "Safe communication evaluations applied to the project",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Safe communication ID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Safe communication name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Safe communication description"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    },
+                    "insights": {
+                      "type": "array",
+                      "description": "Insights applied to the project",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Insight ID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Insight name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Insight description"
+                          },
+                          "items": {
+                            "type": "array",
+                            "description": "Insight items (prompts)",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "description": "Insight item ID"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "description": "Insight item name"
+                                },
+                                "content": {
+                                  "type": "string",
+                                  "description": "Insight item content (prompt)"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "content"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "status",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                },
+                "examples": {
+                  "basic_project": {
+                    "summary": "Basic project without insights/safe communications",
+                    "value": {
+                      "id": "24746a21-bf6a-46c8-872f-8df3c9df1b53",
+                      "accountId": "e7631985-e50d-424e-beef-6cb536d32c11",
+                      "name": "<string>",
+                      "archived": false,
+                      "firstRecordingId": "f62368a1-6fe7-4015-a010-3360ab987134",
+                      "sourceLanguage": "en",
+                      "subtitleProfileId": "12c499bb-1ec9-43f2-9e0a-c07486366898",
+                      "mediaType": "AUDIO",
+                      "duration": 11.7,
+                      "fileCount": 1,
+                      "owner": "<string>",
+                      "status": "COMPLETED",
+                      "recordingTypes": [
+                        "TRANSCRIPTION"
+                      ],
+                      "createdAt": "2025-11-06T16:27:38.279Z",
+                      "updatedAt": "2025-11-06T16:32:19.742Z",
+                      "recordings": [
+                        {
+                          "id": "f62368a1-6fe7-4015-a010-3360ab987134",
+                          "projectId": "24746a21-bf6a-46c8-872f-8df3c9df1b53",
+                          "name": "audio.wav",
+                          "type": "application/octet-stream",
+                          "extension": "wav",
+                          "sourceLanguage": "en",
+                          "translationLanguages": [],
+                          "dubbingLanguages": [],
+                          "summaryEnabled": false,
+                          "customAttributesEnabled": false,
+                          "sourceDuration": 11.65,
+                          "duration": 11.7,
+                          "createdAt": "2025-11-06T16:27:40.620Z",
+                          "updatedAt": "2025-11-06T16:27:40.620Z",
+                          "insightsEnabled": false,
+                          "safeCommunicationsEnabled": false
+                        }
+                      ],
+                      "pronunciations": [],
+                      "safeCommunications": [],
+                      "insights": []
+                    }
+                  },
+                  "full_project": {
+                    "summary": "Project with all features enabled",
+                    "value": {
+                      "id": "f372af3c-c0c5-4913-9c65-fa24d66bbc24",
+                      "accountId": "e7631985-e50d-424e-beef-6cb536d32c11",
+                      "name": "test glossary fetch",
+                      "archived": false,
+                      "firstRecordingId": "5160671f-3233-43f8-bd84-086bfe7fa13d",
+                      "sourceLanguage": "en",
+                      "subtitleProfileId": "12c499bb-1ec9-43f2-9e0a-c07486366898",
+                      "mediaType": "AUDIO",
+                      "duration": 11.7,
+                      "fileCount": 1,
+                      "owner": "<string>",
+                      "status": "COMPLETED",
+                      "recordingTypes": [
+                        "TRANSCRIPTION",
+                        "TRANSLATION",
+                        "DUBBING",
+                        "SUMMARY"
+                      ],
+                      "createdAt": "2025-11-06T16:48:28.959Z",
+                      "updatedAt": "2025-11-06T17:00:00.395Z",
+                      "recordings": [
+                        {
+                          "id": "5160671f-3233-43f8-bd84-086bfe7fa13d",
+                          "projectId": "f372af3c-c0c5-4913-9c65-fa24d66bbc24",
+                          "name": "test-audio.wav",
+                          "type": "audio/wav",
+                          "extension": "wav",
+                          "sourceLanguage": "en",
+                          "translationLanguages": [
+                            "tr"
+                          ],
+                          "dubbingLanguages": [
+                            "tr"
+                          ],
+                          "summaryEnabled": false,
+                          "customAttributesEnabled": false,
+                          "sourceDuration": 11.65,
+                          "duration": 11.7,
+                          "createdAt": "2025-11-06T16:48:31.746Z",
+                          "updatedAt": "2025-11-06T16:48:31.746Z",
+                          "insightsEnabled": true,
+                          "safeCommunicationsEnabled": true
+                        }
+                      ],
+                      "pronunciations": [
+                        {
+                          "id": "f983b484-e1b6-439d-8aca-fd9c29181773",
+                          "name": "english  greeting",
+                          "languageCode": "tr",
+                          "items": [
+                            {
+                              "source": "hello",
+                              "target": "onion"
+                            }
+                          ]
+                        }
+                      ],
+                      "safeCommunications": [
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655440003",
+                          "name": "Respectful Language",
+                          "description": "Assesses the use of polite, considerate, and civil language while ensuring the absence of derogatory terms, personal attacks, or demeaning phrases towards any individual or group."
+                        },
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655440002",
+                          "name": "Potential Red Flags",
+                          "description": "Identifies content, phrases, or exchanges that could be considered unethical, illegal, or harmful, potentially exposing individuals or organizations to legal, reputational, or security risks."
+                        }
+                      ],
+                      "insights": [
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655445001",
+                          "name": "Earnings Call",
+                          "description": "Curated prompts to analyze quarterly earnings calls, focusing on growth drivers, risk factors, and forward-looking guidance to inform strategic decisions.",
+                          "items": [
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445101",
+                              "name": "Growth and Revenue Drivers",
+                              "content": "Can you elaborate on the primary drivers behind this quarter's revenue growth or decline? Specifically, how do factors such as market demand, pricing changes, new customer acquisition, or product/service mix have impacted the earnings results?"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445102",
+                              "name": "Challenges and Risk Management",
+                              "content": "What were the main challenges faced this quarter, and how have they impacted the financial results? Additionally, how is the company addressing these challenges, and what risk management strategies are being implemented to mitigate potential future risks?"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445103",
+                              "name": "Future Outlook and Strategic Initiatives",
+                              "content": "Based on this quarter's performance and current market trends, what is the company's outlook for the upcoming quarters? Can you provide more details on any planned strategic initiatives or investments that are expected to drive future growth or improve operational efficiency?"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655445002",
+                          "name": "Company Presentation",
+                          "description": "Prompts designed to extract actionable insights from company presentations, covering implementation steps, emerging trends, and lessons learned for better execution.",
+                          "items": [
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445201",
+                              "name": "Insights on Implementation",
+                              "content": "Based on the strategies or solutions you presented, could you suggest practical steps for implementation in a [specific context relevant to your field or interest]? How do these steps account for common obstacles or industry-specific challenges?"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445202",
+                              "name": "Future Implications and Trends",
+                              "content": "From your perspective, how might the trends or innovations you discussed today evolve over the next few years? What do you foresee as the potential long-term impact on our industry, and how should professionals or organizations prepare to adapt?"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445203",
+                              "name": "Lessons from Successes and Failures",
+                              "content": "Can you share a personal experience or a case study where the approach you advocated led to significant outcomes, either successful or otherwise? What were the key lessons learned, and how can these insights inform future strategy or decision-making?"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid ID)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_id": {
+                    "summary": "Invalid project id",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Project not found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Project not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Delete Project",
+        "description": "Delete a specific project and all its associated recordings and data",
+        "operationId": "deleteProject",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request (invalid ID)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_id": {
+                    "summary": "Invalid project id",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found or you don't have access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Project not found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Project not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Update Project Settings",
+        "description": "Update an existing project's AI model preferences, TTS provider, translation memory / MT profile assignment, and sharing visibility. The endpoint is partial: only fields present in the body are written, so a single field can be changed without resending the rest. Authorization is restricted to the project owner and other accounts in the same organization.",
+        "operationId": "updateProject",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectRequest"
+              },
+              "examples": {
+                "assign_translation_resources": {
+                  "summary": "Assign a translation memory and MT profile",
+                  "value": {
+                    "translationMemoryId": "tm-uid-123",
+                    "mtProfileId": "mt-profile-uid-456"
+                  }
+                },
+                "switch_tts_provider": {
+                  "summary": "Change the TTS provider used for dubbing",
+                  "value": {
+                    "ttsProvider": "eleven_v3"
+                  }
+                },
+                "change_translation_model": {
+                  "summary": "Change the AI translation model",
+                  "value": {
+                    "translationModelType": "GPT",
+                    "translationModelName": "gpt-5-mini"
+                  }
+                },
+                "share_project": {
+                  "summary": "Mark the project as shared (visible to the API key owner)",
+                  "value": {
+                    "isPublic": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project updated successfully"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "bad_request": {
+                    "summary": "Bad Request",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "project_not_found": {
+                    "summary": "Project not found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Project not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internal_server_error": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subtitle-profiles": {
+      "get": {
+        "tags": [
+          "Subtitle Profiles"
+        ],
+        "summary": "Get Subtitle Profiles",
+        "description": "Retrieve available subtitle profiles for the authenticated account",
+        "operationId": "getSubtitleProfiles",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subtitle profiles retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Array of subtitle profiles",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Subtitle profile ID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Subtitle profile name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Subtitle profile description"
+                          },
+                          "active": {
+                            "type": "boolean",
+                            "description": "Whether this profile is active"
+                          },
+                          "minDuration": {
+                            "type": "number",
+                            "description": "Minimum subtitle duration (seconds)"
+                          },
+                          "maxDuration": {
+                            "type": "number",
+                            "description": "Maximum subtitle duration (seconds)"
+                          },
+                          "maxLineCharacterCount": {
+                            "type": "number",
+                            "description": "Max characters per line"
+                          },
+                          "maxGapBetweenWords": {
+                            "type": "number",
+                            "description": "Max gap between words (seconds)"
+                          },
+                          "subtitlePosition": {
+                            "type": "string",
+                            "description": "Subtitle position",
+                            "enum": [
+                              "top",
+                              "bottom",
+                              "center",
+                              "right",
+                              "middle",
+                              "left"
+                            ]
+                          },
+                          "displaySpeakerNames": {
+                            "type": "boolean",
+                            "description": "Display speaker names"
+                          },
+                          "maxLinesPerScreen": {
+                            "type": "number",
+                            "description": "Max lines per screen"
+                          },
+                          "fontSize": {
+                            "type": "number",
+                            "description": "Font size for subtitles"
+                          },
+                          "textColor": {
+                            "type": "string",
+                            "description": "Text color (hex)"
+                          },
+                          "backgroundColor": {
+                            "type": "string",
+                            "description": "Background color (hex)"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "active"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "pageSize",
+                        "total",
+                        "totalPages"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Access denied",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/recordings/{recordingId}/status": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Get Recording Status",
+        "description": "Retrieve the processing status of a recording. This endpoint supports three modes:\n\n1. **Overall Status** (`summary=true`): Returns a high-level status string indicating the recording's overall state (PENDING, IN_PROGRESS, COMPLETED, or FAILED).\n\n2. **All Languages Breakdown** (no params): Returns completion status for each processing step (transcription, translation, dubbing, summary) grouped by language code. Only completed steps are included in the response.\n\n3. **Single Language Breakdown** (`language=<code>`): Returns completion status for processing steps of a specific language. Only completed steps are included in the response.",
+        "operationId": "getRecordingStatusUnified",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recordingId",
+            "in": "path",
+            "required": true,
+            "description": "Recording ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "required": false,
+            "description": "When set to `true`, returns only the overall recording status as a simple status string (PENDING, IN_PROGRESS, COMPLETED, or FAILED). Cannot be used together with the `language` parameter.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "description": "Language code (e.g., 'en', 'es', 'fr') to retrieve completion status for a specific language's processing steps. When provided, only the steps completed for that language are returned. Cannot be used together with the `summary` parameter.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recording status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "description": "Overall status response (when summary=true)",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "description": "Overall recording processing status",
+                          "enum": [
+                            "PENDING",
+                            "IN_PROGRESS",
+                            "COMPLETED",
+                            "FAILED"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Per-language breakdown response (when no parameters provided). Keys are language codes, values are objects showing which steps are completed for that language.",
+                      "additionalProperties": {
+                        "type": "object",
+                        "description": "Completion status for each processing step. Only completed steps appear in the response.",
+                        "properties": {
+                          "transcription": {
+                            "type": "boolean",
+                            "description": "True if transcription is completed for this language"
+                          },
+                          "translation": {
+                            "type": "boolean",
+                            "description": "True if translation is completed for this language"
+                          },
+                          "dubbing": {
+                            "type": "boolean",
+                            "description": "True if dubbing is completed for this language"
+                          },
+                          "summary": {
+                            "type": "boolean",
+                            "description": "True if summary is completed for this language"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "Single language breakdown response (when language parameter provided). Shows which steps are completed for the specified language.",
+                      "properties": {
+                        "transcription": {
+                          "type": "boolean",
+                          "description": "True if transcription is completed"
+                        },
+                        "translation": {
+                          "type": "boolean",
+                          "description": "True if translation is completed"
+                        },
+                        "dubbing": {
+                          "type": "boolean",
+                          "description": "True if dubbing is completed"
+                        },
+                        "summary": {
+                          "type": "boolean",
+                          "description": "True if summary is completed"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "overall": {
+                    "summary": "Overall status (summary=true)",
+                    "value": {
+                      "status": "IN_PROGRESS"
+                    }
+                  },
+                  "allLangs": {
+                    "summary": "All languages breakdown (no parameters)",
+                    "value": {
+                      "en": {
+                        "transcription": true
+                      },
+                      "tr": {
+                        "transcription": true,
+                        "translation": true,
+                        "dubbing": true
+                      }
+                    }
+                  },
+                  "singleLang": {
+                    "summary": "Single language breakdown (language=en)",
+                    "value": {
+                      "transcription": true,
+                      "translation": true,
+                      "summary": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid ID or parameters)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_params": {
+                    "summary": "Invalid parameters",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Access denied",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Recording not found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Recording not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/recordings/{recordingId}": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Get Recording Output",
+        "description": "Retrieve transcription, translation or dubbing outputs using a single query-driven endpoint.",
+        "operationId": "getRecordingOutput",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recordingId",
+            "in": "path",
+            "required": true,
+            "description": "Recording ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "task",
+            "in": "query",
+            "required": true,
+            "description": "Task to retrieve output for (case-insensitive).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "transcription",
+                "translation",
+                "dubbing"
+              ]
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "description": "Output format. Defaults to srt. For dubbing you may request mp3 to get downloadable audio URLs.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "srt",
+                "vtt",
+                "mp3"
+              ]
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "description": "Language code (when requesting a specific translation or dubbing).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recording output retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Map of language code to content. For srt/vtt, the value is subtitle content; for mp3, the value is a downloadable audio URL."
+                },
+                "examples": {
+                  "transcriptionSrt": {
+                    "summary": "Original transcription as SRT (map)",
+                    "value": {
+                      "en": "1\n00:00:01,000 --> 00:00:04,000\nHello..."
+                    }
+                  },
+                  "translationVttAll": {
+                    "summary": "All translations as VTTs (map)",
+                    "value": {
+                      "es": "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHola...",
+                      "fr": "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nBonjour..."
+                    }
+                  },
+                  "dubbingVttSingle": {
+                    "summary": "Spanish dubbing subtitles as VTT (single lang)",
+                    "value": {
+                      "es": "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHola..."
+                    }
+                  },
+                  "dubbingMp3All": {
+                    "summary": "All dubbings → audio URLs (map)",
+                    "value": {
+                      "es": "https://example.com/es.mp3",
+                      "fr": "https://example.com/fr.mp3"
+                    }
+                  },
+                  "dubbingMp3Single": {
+                    "summary": "One dubbing (French) → audio URL (map)",
+                    "value": {
+                      "fr": "https://example.com/fr.mp3"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid ID or parameters)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_params": {
+                    "summary": "Invalid parameters",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Access denied",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Recording not found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Recording not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pronunciations": {
+      "get": {
+        "tags": [
+          "Pronunciations"
+        ],
+        "summary": "Get Pronunciations",
+        "description": "Retrieve available pronunciations for the authenticated account",
+        "operationId": "getPronunciations",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pronunciations retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Array of pronunciations",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Pronunciation set ID"
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true,
+                            "description": "Account ID (nullable for shared)"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Pronunciation set name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Pronunciation set description"
+                          },
+                          "active": {
+                            "type": "boolean",
+                            "description": "Whether this set is active"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update time"
+                          },
+                          "items": {
+                            "type": "array",
+                            "description": "Pronunciation items",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "pronunciationId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "source": {
+                                  "type": "string"
+                                },
+                                "target": {
+                                  "type": "string"
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "pronunciationId",
+                                "source",
+                                "target",
+                                "createdAt",
+                                "updatedAt"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "active"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "pageSize",
+                        "total",
+                        "totalPages"
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "example": {
+                    "summary": "Sample response",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "f983b484-e1b6-439d-8aca-fd9c29181773",
+                          "accountId": "e7631985-e50d-424e-beef-6cb536d32c11",
+                          "name": "english  greeting",
+                          "description": "test",
+                          "active": true,
+                          "createdAt": "2025-10-13T10:53:12.400Z",
+                          "updatedAt": "2025-10-13T10:53:12.400Z",
+                          "items": [
+                            {
+                              "id": "03e75ff0-50f2-493c-a46b-b0f4101e5850",
+                              "pronunciationId": "f983b484-e1b6-439d-8aca-fd9c29181773",
+                              "source": "hello",
+                              "target": "onion",
+                              "createdAt": "2025-10-13T10:53:26.934Z",
+                              "updatedAt": "2025-10-13T10:53:26.934Z"
+                            }
+                          ]
+                        }
+                      ],
+                      "pagination": {
+                        "page": 1,
+                        "pageSize": 1,
+                        "total": 1,
+                        "totalPages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/glossaries": {
+      "get": {
+        "tags": [
+          "Glossaries"
+        ],
+        "summary": "Get Glossaries",
+        "description": "Retrieve available glossaries for the authenticated account. Items have newline character between them.",
+        "operationId": "getGlossaries",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Glossaries retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Array of glossaries",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Glossary ID"
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true,
+                            "description": "Account ID (nullable for shared)"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Glossary name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Glossary description"
+                          },
+                          "items": {
+                            "type": "string",
+                            "description": "Glossary items (newline-separated)"
+                          },
+                          "active": {
+                            "type": "boolean",
+                            "description": "Whether this glossary is active"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "active"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "pageSize",
+                        "total",
+                        "totalPages"
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "example": {
+                    "summary": "Sample response",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "00cd5cdb-ce8b-423a-a9b8-ca5dd5db7442",
+                          "accountId": "e7631985-e50d-424e-beef-6cb536d32c11",
+                          "name": "company names",
+                          "description": null,
+                          "items": "OTOMATA\nNike\nHP\nNvidia",
+                          "active": true,
+                          "createdAt": "2025-11-06T10:15:59.738Z",
+                          "updatedAt": "2025-11-06T10:15:59.738Z"
+                        },
+                        {
+                          "id": "99af75c5-b606-4aee-a3db-ee149c662ea6",
+                          "accountId": "e7631985-e50d-424e-beef-6cb536d32c11",
+                          "name": "test",
+                          "description": null,
+                          "items": "voila violing ding dong",
+                          "active": true,
+                          "createdAt": "2025-11-06T09:43:17.888Z",
+                          "updatedAt": "2025-11-06T09:43:17.888Z"
+                        }
+                      ],
+                      "pagination": {
+                        "page": 1,
+                        "pageSize": 2,
+                        "total": 2,
+                        "totalPages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/insights": {
+      "get": {
+        "tags": [
+          "Insights"
+        ],
+        "summary": "Get Insights",
+        "description": "Retrieve all insights available to the authenticated account. Insights are named collections of AI-powered prompts that analyze conversation transcripts and meeting recordings; each one groups related prompts (items) under a category such as `Earnings Call` or `Company Presentation`. The response includes both **shared** insights (`accountId` is null) and **account-specific** insights visible only to the owning account.",
+        "operationId": "getInsights",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Insights retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Array of insights",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Insight ID"
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true,
+                            "description": "Account ID (nullable for shared)"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Insight name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Insight description"
+                          },
+                          "active": {
+                            "type": "boolean",
+                            "description": "Whether this insight is active"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update time"
+                          },
+                          "items": {
+                            "type": "array",
+                            "description": "Insight items",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "insightId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "content": {
+                                  "type": "string"
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "insightId",
+                                "name",
+                                "content",
+                                "createdAt",
+                                "updatedAt"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "active"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "pageSize",
+                        "total",
+                        "totalPages"
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "example": {
+                    "summary": "Sample response",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655445001",
+                          "accountId": null,
+                          "name": "Earnings Call",
+                          "description": "Curated prompts to analyze quarterly earnings calls, focusing on growth drivers, risk factors, and forward-looking guidance to inform strategic decisions.",
+                          "active": true,
+                          "createdAt": "2025-09-12T10:59:01.426Z",
+                          "updatedAt": "2025-09-18T12:55:15.134Z",
+                          "items": [
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445103",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445001",
+                              "name": "Future Outlook and Strategic Initiatives",
+                              "content": "Based on this quarter's performance and current market trends, what is the company's outlook for the upcoming quarters? Can you provide more details on any planned strategic initiatives or investments that are expected to drive future growth or improve operational efficiency?",
+                              "createdAt": "2025-09-12T10:59:02.097Z",
+                              "updatedAt": "2025-09-18T12:55:15.993Z"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445102",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445001",
+                              "name": "Challenges and Risk Management",
+                              "content": "What were the main challenges faced this quarter, and how have they impacted the financial results? Additionally, how is the company addressing these challenges, and what risk management strategies are being implemented to mitigate potential future risks?",
+                              "createdAt": "2025-09-12T10:59:01.958Z",
+                              "updatedAt": "2025-09-18T12:55:15.822Z"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445101",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445001",
+                              "name": "Growth and Revenue Drivers",
+                              "content": "Can you elaborate on the primary drivers behind this quarter's revenue growth or decline? Specifically, how do factors such as market demand, pricing changes, new customer acquisition, or product/service mix have impacted the earnings results?",
+                              "createdAt": "2025-09-12T10:59:01.827Z",
+                              "updatedAt": "2025-09-18T12:55:15.650Z"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655445002",
+                          "accountId": null,
+                          "name": "Company Presentation",
+                          "description": "Prompts designed to extract actionable insights from company presentations, covering implementation steps, emerging trends, and lessons learned for better execution.",
+                          "active": true,
+                          "createdAt": "2025-09-12T10:59:01.560Z",
+                          "updatedAt": "2025-09-18T12:55:15.306Z",
+                          "items": [
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445203",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445002",
+                              "name": "Lessons from Successes and Failures",
+                              "content": "Can you share a personal experience or a case study where the approach you advocated led to significant outcomes, either successful or otherwise? What were the key lessons learned, and how can these insights inform future strategy or decision-making?",
+                              "createdAt": "2025-09-12T10:59:02.518Z",
+                              "updatedAt": "2025-09-18T12:55:16.507Z"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445202",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445002",
+                              "name": "Future Implications and Trends",
+                              "content": "From your perspective, how might the trends or innovations you discussed today evolve over the next few years? What do you foresee as the potential long-term impact on our industry, and how should professionals or organizations prepare to adapt?",
+                              "createdAt": "2025-09-12T10:59:02.362Z",
+                              "updatedAt": "2025-09-18T12:55:16.336Z"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445201",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445002",
+                              "name": "Insights on Implementation",
+                              "content": "Based on the strategies or solutions you presented, could you suggest practical steps for implementation in a [specific context relevant to your field or interest]? How do these steps account for common obstacles or industry-specific challenges?",
+                              "createdAt": "2025-09-12T10:59:02.229Z",
+                              "updatedAt": "2025-09-18T12:55:16.165Z"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655445003",
+                          "accountId": null,
+                          "name": "General",
+                          "description": "Universal analysis prompts to summarize objectives, key arguments, and underlying assumptions for any conversation or meeting context.",
+                          "active": true,
+                          "createdAt": "2025-09-12T10:59:01.692Z",
+                          "updatedAt": "2025-09-18T12:55:15.478Z",
+                          "items": [
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445303",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445003",
+                              "name": "Underlying Assumptions and Future Implications",
+                              "content": "What assumptions were underlying the participants' viewpoints or decisions, and how might these impact future actions or decisions? Are there any potential long-term implications or follow-up actions discussed or implied?",
+                              "createdAt": "2025-09-12T10:59:02.914Z",
+                              "updatedAt": "2025-09-18T12:55:17.023Z"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445302",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445003",
+                              "name": "Key Points and Arguments",
+                              "content": "What were the main points or arguments presented by each participant? How did these contribute to the progression of the conversation, and were there any pivotal moments or turning points?",
+                              "createdAt": "2025-09-12T10:59:02.782Z",
+                              "updatedAt": "2025-09-18T12:55:16.850Z"
+                            },
+                            {
+                              "id": "550e8400-e29b-41d4-a716-446655445301",
+                              "insightId": "550e8400-e29b-41d4-a716-446655445003",
+                              "name": "Objective and Outcomes",
+                              "content": "What were the primary objectives or goals of this conversation? Were these objectives met, and what were the key outcomes or decisions made?",
+                              "createdAt": "2025-09-12T10:59:02.650Z",
+                              "updatedAt": "2025-09-18T12:55:16.678Z"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "cf85c4e5-66e3-4f37-a8a1-e0c62b74b32a",
+                          "accountId": "e7631985-e50d-424e-beef-6cb536d32c11",
+                          "name": "test",
+                          "description": "my test insight\n",
+                          "active": true,
+                          "createdAt": "2025-11-06T17:15:27.209Z",
+                          "updatedAt": "2025-11-06T17:15:27.209Z",
+                          "items": [
+                            {
+                              "id": "1b600ac7-088e-46c3-afc7-006c1a63243a",
+                              "insightId": "cf85c4e5-66e3-4f37-a8a1-e0c62b74b32a",
+                              "name": "this is test prompt",
+                              "content": "this is test prompt",
+                              "createdAt": "2025-11-06T17:15:42.018Z",
+                              "updatedAt": "2025-11-06T17:15:42.018Z"
+                            }
+                          ]
+                        }
+                      ],
+                      "pagination": {
+                        "page": 1,
+                        "pageSize": 4,
+                        "total": 4,
+                        "totalPages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid or missing API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Invalid API key",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (key lacks access to this resource)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Access denied",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Forbidden",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "server_error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/safe-communications": {
+      "get": {
+        "tags": [
+          "Safe Communications"
+        ],
+        "summary": "Get Safe Communications",
+        "description": "Retrieve available safe communications for the authenticated account",
+        "operationId": "getSafeCommunications",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe communications retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Array of safe communications",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Safe communication ID"
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true,
+                            "description": "Account ID (nullable for shared)"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Description"
+                          },
+                          "content": {
+                            "type": "string",
+                            "description": "Evaluation content/prompt"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "content"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "page",
+                        "pageSize",
+                        "total",
+                        "totalPages"
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "example": {
+                    "summary": "Sample response",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655440003",
+                          "accountId": null,
+                          "name": "Respectful Language",
+                          "description": "Assesses the use of polite, considerate, and civil language while ensuring the absence of derogatory terms, personal attacks, or demeaning phrases towards any individual or group.",
+                          "content": "Score\nOn a scale of 20 to 100, where 20 represents a complete lack of respect and 100 represents the highest standard of respectful communication, how would you rate the following conversation in terms of:\nThe use of polite and considerate language,\nThe absence of derogatory terms, personal attacks, or demeaning phrases,\nThe level of understanding and empathy demonstrated towards all participants,\nThe degree to which the language promotes a positive and inclusive dialogue?\n\nDescription\nDoes the language in the following conversation exhibit Respectful language considering aspects such as politeness, considerateness, and civility, without any use of derogatory terms, personal attacks, or demeaning phrases towards any individual or group?",
+                          "createdAt": "2025-09-10T14:33:02.786Z",
+                          "updatedAt": "2025-09-18T09:55:13.427Z"
+                        },
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655440002",
+                          "accountId": null,
+                          "name": "Potential Red Flags",
+                          "description": "Identifies content, phrases, or exchanges that could be considered unethical, illegal, or harmful, potentially exposing individuals or organizations to legal, reputational, or security risks.",
+                          "content": "Score\nOn a scale of 0 to 100, how would you rate the following conversation in terms of ethical and legal integrity, with consideration to the following factors:\nThe absence of language or content that could be interpreted as unethical, illegal, or in violation of policies or regulations,\nThe presence of respectful and professional dialogue that upholds the values and reputation of the individuals and the organization,\nThe degree to which the conversation maintains confidentiality, data protection, and respect for personal and proprietary information,\nThe extent to which the conversation aligns with the established norms, values, and codes of conduct of the relevant individuals or organization?\n\nDescription\nDoes the following conversation contain any content, phrases, or exchanges that could be considered unethical, illegal, or harmful, potentially exposing individuals or the organization to risks such as legal liability, reputational damage, or security threats?",
+                          "createdAt": "2025-09-10T14:33:02.655Z",
+                          "updatedAt": "2025-09-18T09:55:13.255Z"
+                        },
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655440001",
+                          "accountId": null,
+                          "name": "Diversity and Inclusion",
+                          "description": "Evaluates how well the conversation reflects awareness and respect for diversity and inclusion, recognizing and valuing diverse perspectives, experiences, and backgrounds of all participants.",
+                          "content": "Score\nOn a scale of 20 to 100, where 20 indicates no consideration of diversity and inclusion and 100 represents exemplary incorporation of diverse and inclusive practices, how would you rate the conversation in terms of:\nThe representation and integration of diverse perspectives and backgrounds,\nThe level of sensitivity and respect shown towards cultural, racial, gender, and other forms of diversity,\nThe extent to which the conversation promotes equal participation and values contributions from all individuals,\nThe presence of language and attitudes that support and foster an inclusive environment?\n\nDescription\nHow well does the following conversation reflect an awareness and respect for diversity and inclusion, in terms of recognizing, valuing, and integrating diverse perspectives, experiences, and backgrounds of all participants?",
+                          "createdAt": "2025-09-10T14:33:02.522Z",
+                          "updatedAt": "2025-09-18T09:55:13.083Z"
+                        }
+                      ],
+                      "pagination": {
+                        "page": 1,
+                        "pageSize": 3,
+                        "total": 3,
+                        "totalPages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (access denied)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}/recordings/{recordingId}/subtitles": {
+      "put": {
+        "tags": [
+          "Subtitles"
+        ],
+        "summary": "Update Subtitle",
+        "description": "Replace the subtitle segments of a recording's language track. The request body must contain **every** segment in the final state — the endpoint performs a bulk replace, not a partial patch. Any segment you omit is removed from the track. Use this to push subtitle edits made externally (for example, by AI editing tools) back into Studio.\n\n## `words` is the source of truth — never send empty `words`\n\nEach segment's `words` array (word-level text and timings) is authoritative. Subtitle rendering **and** dubbing text-to-speech are generated from `words`; the segment-level `text` field is only a human-readable mirror and is **ignored** when rendering subtitles or synthesizing speech.\n\nA segment whose `words` array is empty is treated as having no content: it is **silently dropped the next time the track is read**, and for dubbing nothing is synthesized for it. This is the most common cause of a track that “comes back empty” after an update. Never submit `\"words\": []` unless you intend to remove that segment's content.\n\nTo change what a segment says — for example, shortening a dubbing line — rewrite its `words` array, not just `text`. Mirror the change in `text` for readability, but the `words` entries are what actually change the rendered subtitle and the generated audio.\n\n## Recommended workflow\n\n1. `GET` the track to fetch the current segments with their word-level timings.\n2. Edit the `words` array of the segment(s) you want to change (and mirror the new text in `text`). Leave every other segment untouched.\n3. `PUT` the **full** segment array back. For a dubbing redub, list the changed segment ids in `segmentsToRedub` and keep `enqueueTtsUpdate=true` so their audio is regenerated from the new `words`.\n\nTo edit text without triggering re-synthesis, set `enqueueTtsUpdate` to `false` — but still send the full `words` array for every segment.\n\n## Language scoping\n\nThe `language` value must match the requested task type for the recording:\n* When `source=true` and `dubbing=false` (transcription), `language` must equal the recording source language.\n* When `source=false` and `dubbing=false` (translation), `language` must be one of the recording translation languages.\n* When `source=false` and `dubbing=true` (dubbing), `language` must be one of the recording translation languages.\n* `source=true` and `dubbing=true` together is invalid.\n\nMismatched combinations return `400` with a descriptive message rather than reaching the underlying file lookup.",
+        "operationId": "updateSubtitles",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recordingId",
+            "in": "path",
+            "required": true,
+            "description": "Recording ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubtitleRequest"
+              },
+              "examples": {
+                "source_text_edit": {
+                  "summary": "Replace a source-language transcript segment without TTS regeneration",
+                  "value": {
+                    "language": "en",
+                    "source": true,
+                    "dubbing": false,
+                    "enqueueTtsUpdate": false,
+                    "subtitles": [
+                      {
+                        "id": "seg-1",
+                        "key": "seg-1_en_true_false",
+                        "time_begin": 0,
+                        "time_end": 1.8,
+                        "speaker": "speaker_1",
+                        "language": "en",
+                        "text": "Hello and welcome.",
+                        "words": [
+                          {
+                            "word": "Hello",
+                            "time_begin": 0,
+                            "time_end": 0.5
+                          },
+                          {
+                            "word": "and",
+                            "time_begin": 0.5,
+                            "time_end": 0.8
+                          },
+                          {
+                            "word": "welcome.",
+                            "time_begin": 0.8,
+                            "time_end": 1.8,
+                            "is_eos": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "dubbing_redub": {
+                  "summary": "Update a dubbing track and queue specific segments for re-synthesis",
+                  "value": {
+                    "language": "tr",
+                    "source": false,
+                    "dubbing": true,
+                    "enqueueTtsUpdate": true,
+                    "segmentsToRedub": [
+                      "seg-1"
+                    ],
+                    "subtitles": [
+                      {
+                        "id": "seg-1",
+                        "key": "seg-1_tr_false_true",
+                        "time_begin": 0,
+                        "time_end": 1.8,
+                        "speaker": "voice-uid-123",
+                        "language": "tr",
+                        "text": "Merhaba ve hoş geldiniz.",
+                        "words": [
+                          {
+                            "word": "Merhaba",
+                            "time_begin": 0,
+                            "time_end": 0.6
+                          },
+                          {
+                            "word": "ve",
+                            "time_begin": 0.6,
+                            "time_end": 0.8
+                          },
+                          {
+                            "word": "hoş",
+                            "time_begin": 0.8,
+                            "time_end": 1.2
+                          },
+                          {
+                            "word": "geldiniz.",
+                            "time_begin": 1.2,
+                            "time_end": 1.8,
+                            "is_eos": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subtitles updated successfully"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "bad_request": {
+                    "summary": "Bad Request",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "language_not_available": {
+                    "summary": "Language not available for the requested task",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Language 'fr' is not available for translation on this recording. Available languages: tr, es",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "source_dubbing_conflict": {
+                    "summary": "source and dubbing both true",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "source and dubbing cannot both be true",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Not Found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Project or recording not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internal_server_error": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Subtitles"
+        ],
+        "summary": "Get Subtitle",
+        "description": "Retrieve the structured subtitle segments of a recording's language track in JSON form (with word-level timings). The response shape mirrors the PUT request body — use this before `PUT` to fetch the current segments, edit the `words` array of the segment(s) you want to change (word-level text and timings are the source of truth; editing `text` alone has no effect), and send the full array back. The `source` and `dubbing` query flags pick which track to read: source transcription, target translation, or dubbing.\n\n## Language scoping\n\nThe `language` value must match the requested task type for the recording:\n* When `source=true` and `dubbing=false` (transcription), `language` must equal the recording source language.\n* When `source=false` and `dubbing=false` (translation), `language` must be one of the recording translation languages.\n* When `source=false` and `dubbing=true` (dubbing), `language` must be one of the recording translation languages.\n* `source=true` and `dubbing=true` together is invalid.\n\nMismatched combinations return `400` with a descriptive message rather than reaching the underlying file lookup.",
+        "operationId": "getSubtitles",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recordingId",
+            "in": "path",
+            "required": true,
+            "description": "Recording ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": true,
+            "description": "BCP-47 language code of the track to read",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to read the source (transcription) track",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "dubbing",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to read the dubbing track",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subtitle track returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubtitleSegmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "bad_request": {
+                    "summary": "Bad Request",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "language_not_available": {
+                    "summary": "Language not available for the requested task",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Language 'fr' is not available for translation on this recording. Available languages: tr, es",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "source_dubbing_conflict": {
+                    "summary": "source and dubbing both true",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "source and dubbing cannot both be true",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Not Found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Subtitles not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internal_server_error": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}/recordings/{recordingId}/translate": {
+      "post": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Translate Recording",
+        "description": "Add one or more target translation languages to a recording that already exists, without recreating the project. Use this instead of `POST /v1/projects` whenever the project already exists — for example the caller forgot a language at creation time, the user asks for another language later, or the caller only learns which language is needed after seeing the transcript.\n\n## Precondition: source transcription must be complete\n\nTranslation reads the recording's transcript, so it can only run after transcription has finished. This is **not enforced synchronously** by this endpoint — a call made too early is accepted and queued, but produces no usable result. Before calling this endpoint, check `GET /v1/recordings/{recordingId}/status?language={sourceLanguage}` and confirm `transcription` is `true` (or poll `GET /v1/recordings/{recordingId}/status?summary=true` until `status` is `COMPLETED`).\n\n## Re-requesting a language\n\nA language already in the recording's translation languages is not skipped — it is retranslated (logged as a retranslation rather than an initial translation). Only include a language in `languages` if you actually want it (re-)translated; use `ignoredLanguages` to record a language as intentionally not translated without omitting it from tracking.\n\n## Language support\n\n`languages` accepts any BCP-47-style code Phrase Studio has translation support for — effectively all locales except the literal `auto` placeholder. Do not pass the recording's own source language: the Studio UI excludes it from the language picker, but this endpoint does **not** reject it — it is accepted and produces a same-language \"translation\". An unsupported code is rejected with `400`.\n\n## After translation completes\n\nCall `POST /v1/projects/{projectId}/recordings/{recordingId}/dubbing` to dub any of the resulting languages — dubbing requires the language to be translated first.",
+        "operationId": "translateRecording",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recordingId",
+            "in": "path",
+            "required": true,
+            "description": "Recording ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslateRecordingRequest"
+              },
+              "examples": {
+                "add_translation_language": {
+                  "summary": "Add Czech as a translation target language",
+                  "value": {
+                    "languages": [
+                      "cs"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Translation started for the requested languages"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "bad_request": {
+                    "summary": "Bad Request",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Not Found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Project or recording not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internal_server_error": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}/recordings/{recordingId}/dubbing": {
+      "post": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Dub Recording",
+        "description": "Add one or more target dubbing languages to a recording that already exists, without recreating the project. Use this instead of `POST /v1/projects` whenever the project already exists.\n\n## Precondition: the language must already be translated\n\nDubbing is generated from that language's translated subtitles, so a language can only be dubbed after it has been translated (see `POST /v1/projects/{projectId}/recordings/{recordingId}/translate`). This is **not enforced with a clear error** — requesting dubbing for a language with no completed translation is accepted, the language is recorded against the recording, but no dubbing output is produced. Before calling this endpoint, check `GET /v1/recordings/{recordingId}/status?language={code}` and confirm `translation` is `true` for every language you pass.\n\n## Language support depends on the project's TTS provider\n\nEach Studio project uses one text-to-speech provider, configured in project preferences (falls back to the account default). The set of dubbable languages is different for each provider — always check which provider the project uses before picking languages. Requesting a language unsupported by the project's current provider fails fast with `400` and a message naming the unsupported languages and the provider (see `language_not_supported_by_provider` below) — no dubbing subtitle file or task is created for it.\n\n- **ElevenLabs v2** — 30 languages, base language only (no distinct regional voices; a region-specific code like `en-GB` is accepted only by falling back to its base `en`): `ar, bg, cs, da, de, el, en, es, fi, fil, fr, hi, hr, id, it, ja, ko, ms, nl, pl, pt, ro, ru, sk, sv, ta, tl, tr, uk, zh`\n- **ElevenLabs v3** — 77 languages, base language only (same fallback caveat as v2): `af, ar, as, az, be, bg, bn, bs, ca, ceb, cs, cy, da, de, el, en, es, et, fa, fi, fil, fr, ga, gl, gu, ha, he, hi, hr, hu, hy, id, is, it, ja, jw, ka, kk, kn, ko, ky, lb, ln, lt, lv, mk, ml, mr, ms, ne, nl, nn, no, ny, pa, pl, prs, ps, pt, ro, ru, sd, sk, sl, so, sr, sv, sw, ta, te, th, tl, tr, uk, ur, vi, zh`\n- **Azure TTS** — the only provider with real, distinct regional voices: 155 specific locales (not fallback-inherited) covering 85 languages: `af-ZA, am-ET, ar-AE, ar-BH, ar-DZ, ar-EG, ar-IQ, ar-JO, ar-KW, ar-LB, ar-LY, ar-MA, ar-OM, ar-QA, ar-SA, ar-SY, ar-TN, ar-YE, as-IN, az-AZ, bg-BG, bn-BD, bn-IN, bs-BA, ca-ES, cs-CZ, cy-GB, da-DK, de-AT, de-CH, de-DE, el-GR, en-AU, en-CA, en-GB, en-HK, en-IE, en-IN, en-KE, en-NG, en-NZ, en-PH, en-SG, en-TZ, en-US, en-ZA, es-AR, es-BO, es-CL, es-CO, es-CR, es-CU, es-DO, es-EC, es-ES, es-GQ, es-GT, es-HN, es-MX, es-NI, es-PA, es-PE, es-PR, es-PY, es-SV, es-US, es-UY, es-VE, et-EE, eu-ES, fa-IR, fi-FI, fil-PH, fr-BE, fr-CA, fr-CH, fr-FR, ga-IE, gl-ES, gu-IN, he-IL, hi-IN, hr-HR, hu-HU, hy-AM, id-ID, is-IS, it-CH, it-IT, iu-Cans-CA, iu-Latn-CA, ja-JP, jv-ID, ka-GE, kk-KZ, km-KH, kn-IN, ko-KR, lo-LA, lt-LT, lv-LV, mk-MK, ml-IN, mn-MN, mr-IN, ms-MY, mt-MT, my-MM, nb-NO, ne-NP, nl-BE, nl-NL, or-IN, pa-IN, pl-PL, ps-AF, pt-BR, pt-PT, ro-RO, ru-RU, si-LK, sk-SK, sl-SI, so-SO, sq-AL, sr-Latn-RS, sr-RS, su-ID, sv-SE, sw-KE, sw-TZ, ta-IN, ta-LK, ta-MY, ta-SG, te-IN, th-TH, tr-TR, uk-UA, ur-IN, ur-PK, uz-UZ, vi-VN, wuu-CN, yue-CN, zh-CN, zh-CN-guangxi, zh-CN-henan, zh-CN-liaoning, zh-CN-shaanxi, zh-CN-shandong, zh-CN-sichuan, zh-HK, zh-TW, zu-ZA`. A base code without a region (e.g. plain `zh`) is resolved to one of that language's locales above; pass the specific regional code when you need a particular one (e.g. `zh-TW` rather than `zh-CN`).\n\n## Re-requesting a language\n\nA language already in the recording's dubbing languages is not skipped — it is re-dubbed. `ignoredLanguages` is accepted on this request for shape-parity with the translate endpoint but has no effect on dubbing; every language listed in `languages` is processed.",
+        "operationId": "dubRecording",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "description": "Project ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recordingId",
+            "in": "path",
+            "required": true,
+            "description": "Recording ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddDubbingRequest"
+              },
+              "examples": {
+                "add_dubbing_language": {
+                  "summary": "Add Czech as a dubbing target language",
+                  "value": {
+                    "languages": [
+                      "cs"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dubbing started for the requested languages"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "bad_request": {
+                    "summary": "Bad Request",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Bad Request",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  },
+                  "language_not_supported_by_provider": {
+                    "summary": "Language not supported by the project's TTS provider",
+                    "value": {
+                      "success": false,
+                      "statusCode": 400,
+                      "message": "Dubbing is not supported for cs with ElevenLabs v2",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "success": false,
+                      "statusCode": 401,
+                      "message": "Unauthorized",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "success": false,
+                      "statusCode": 403,
+                      "message": "Access denied",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not_found": {
+                    "summary": "Not Found",
+                    "value": {
+                      "success": false,
+                      "statusCode": 404,
+                      "message": "Project or recording not found",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internal_server_error": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "success": false,
+                      "statusCode": 500,
+                      "message": "Internal server error",
+                      "timestamp": "2025-01-01T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "success",
+          "statusCode",
+          "message",
+          "timestamp"
+        ]
+      },
+      "CreateProjectSubtitleProfile": {
+        "type": "object",
+        "properties": {
+          "subtitleProfileId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Subtitle profile ID"
+          },
+          "languageCode": {
+            "type": "string",
+            "description": "Language for this profile",
+            "enum": [
+              "am",
+              "ar",
+              "as",
+              "az",
+              "ba",
+              "bg",
+              "br",
+              "ca",
+              "cs",
+              "cy",
+              "da",
+              "de",
+              "el",
+              "en",
+              "es",
+              "et",
+              "eu",
+              "fa",
+              "fi",
+              "fo",
+              "fr",
+              "gu",
+              "ha",
+              "he",
+              "hi",
+              "hu",
+              "hy",
+              "id",
+              "is",
+              "it",
+              "ja",
+              "jw",
+              "ka",
+              "kk",
+              "km",
+              "kn",
+              "ko",
+              "la",
+              "lb",
+              "lv",
+              "ml",
+              "mn",
+              "mr",
+              "mt",
+              "ne",
+              "nl",
+              "nn",
+              "no",
+              "pa",
+              "pl",
+              "ps",
+              "pt",
+              "ro",
+              "ru",
+              "si",
+              "sk",
+              "sl",
+              "sq",
+              "sr",
+              "su",
+              "sv",
+              "sw",
+              "ta",
+              "te",
+              "th",
+              "tl",
+              "tr",
+              "tt",
+              "uk",
+              "ur",
+              "uz",
+              "vi",
+              "yue",
+              "zh"
+            ]
+          }
+        },
+        "required": [
+          "subtitleProfileId",
+          "languageCode"
+        ]
+      },
+      "CreateProjectPronunciation": {
+        "type": "object",
+        "properties": {
+          "pronunciationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Pronunciation ID"
+          },
+          "languageCode": {
+            "type": "string",
+            "description": "Language this pronunciation should be applied to",
+            "enum": [
+              "af",
+              "ar",
+              "hy",
+              "as",
+              "az",
+              "be",
+              "bn",
+              "bs",
+              "bg",
+              "ca",
+              "ceb",
+              "ny",
+              "zh",
+              "hr",
+              "cs",
+              "da",
+              "nl",
+              "en",
+              "et",
+              "fil",
+              "fi",
+              "fr",
+              "gl",
+              "ka",
+              "de",
+              "el",
+              "gu",
+              "ha",
+              "he",
+              "hi",
+              "hu",
+              "is",
+              "id",
+              "ga",
+              "it",
+              "ja",
+              "jw",
+              "kn",
+              "kk",
+              "ky",
+              "ko",
+              "lv",
+              "ln",
+              "lt",
+              "lb",
+              "mk",
+              "ms",
+              "ml",
+              "mr",
+              "ne",
+              "no",
+              "ps",
+              "fa",
+              "pl",
+              "pt",
+              "pa",
+              "ro",
+              "ru",
+              "sr",
+              "sd",
+              "sk",
+              "sl",
+              "so",
+              "es",
+              "sw",
+              "sv",
+              "ta",
+              "te",
+              "th",
+              "tr",
+              "uk",
+              "ur",
+              "vi",
+              "cy"
+            ]
+          }
+        },
+        "required": [
+          "pronunciationId",
+          "languageCode"
+        ]
+      },
+      "UpdateProjectRequest": {
+        "type": "object",
+        "description": "Partial update payload for project preferences and visibility. Only fields present in the body are applied; omitted fields are preserved.",
+        "properties": {
+          "insightsModelType": {
+            "type": "string",
+            "enum": [
+              "GPT",
+              "CUSTOM"
+            ],
+            "description": "AI model provider type for insights"
+          },
+          "insightsModelName": {
+            "type": "string",
+            "enum": [
+              "gpt-5-mini",
+              "gpt-4o-mini",
+              "plai",
+              "aita"
+            ],
+            "description": "AI model identifier for insights"
+          },
+          "translationModelType": {
+            "type": "string",
+            "enum": [
+              "GPT",
+              "CUSTOM"
+            ],
+            "description": "AI model provider type for translation"
+          },
+          "translationModelName": {
+            "type": "string",
+            "enum": [
+              "gpt-5-mini",
+              "gpt-4o-mini",
+              "plai",
+              "aita"
+            ],
+            "description": "AI model identifier for translation"
+          },
+          "ttsProvider": {
+            "type": "string",
+            "enum": [
+              "eleven_v2",
+              "eleven_v3",
+              "azure_tts"
+            ],
+            "description": "Text-to-speech provider for dubbing"
+          },
+          "mtProfileId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Machine translation profile identifier (TMS UID)"
+          },
+          "translationMemoryId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Translation memory identifier (TMS UID)"
+          },
+          "isPublic": {
+            "type": "boolean",
+            "description": "When true, the project is shared so it can be accessed by the API key owner. When false, that share is revoked."
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubtitleWord": {
+        "type": "object",
+        "required": [
+          "word",
+          "time_begin",
+          "time_end"
+        ],
+        "properties": {
+          "word": {
+            "type": "string",
+            "description": "Word text"
+          },
+          "time_begin": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Start time in seconds"
+          },
+          "time_end": {
+            "type": "number",
+            "minimum": 0,
+            "description": "End time in seconds"
+          },
+          "is_eos": {
+            "type": "boolean",
+            "description": "Whether this word ends a sentence"
+          }
+        }
+      },
+      "SubtitleSegment": {
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "time_begin",
+          "time_end",
+          "words",
+          "speaker",
+          "language"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Segment identifier (stable across edits)"
+          },
+          "key": {
+            "type": "string",
+            "description": "Composite key in the form `${id}_${language}_${source}_${dubbing}`. Must match the request-level language/source/dubbing flags."
+          },
+          "time_begin": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Segment start time in seconds"
+          },
+          "time_end": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Segment end time in seconds"
+          },
+          "words": {
+            "type": "array",
+            "description": "Word-level text and timings. **Source of truth** for both subtitle rendering and dubbing text-to-speech. Must be non-empty: a segment submitted with an empty `words` array is dropped the next time the track is read (and produces no dubbing audio). To change a segment's content, edit these entries — not `text`.",
+            "items": {
+              "$ref": "#/components/schemas/SubtitleWord"
+            }
+          },
+          "speaker": {
+            "type": "string",
+            "description": "Speaker identifier (voice id or label)"
+          },
+          "language": {
+            "type": "string",
+            "description": "BCP-47 language code for the segment"
+          },
+          "text": {
+            "type": "string",
+            "description": "Human-readable mirror of the segment text. **Not authoritative** — it is ignored when rendering subtitles or synthesizing dubbing audio, both of which are derived from `words`. Editing `text` alone has no effect on the output; change `words` instead (and keep `text` in sync for readability)."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional editorial metadata (review state, tags, etc.)",
+            "additionalProperties": true
+          },
+          "cue_settings": {
+            "type": "object",
+            "description": "Optional VTT cue rendering settings",
+            "additionalProperties": true
+          }
+        }
+      },
+      "UpdateSubtitleRequest": {
+        "type": "object",
+        "required": [
+          "subtitles",
+          "language"
+        ],
+        "properties": {
+          "language": {
+            "type": "string",
+            "description": "BCP-47 language code of the track to write"
+          },
+          "source": {
+            "type": "boolean",
+            "default": false,
+            "description": "True when writing the source (transcript) track"
+          },
+          "dubbing": {
+            "type": "boolean",
+            "default": false,
+            "description": "True when writing a dubbing track"
+          },
+          "bgVolume": {
+            "type": "number",
+            "description": "Dubbing background-audio volume (only honored for dubbing tracks)"
+          },
+          "speakerVolumes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Per-speaker volume overrides (dubbing only)"
+          },
+          "speakerVoiceSettings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Per-speaker TTS voice settings (dubbing only)"
+          },
+          "segmentsToRedub": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Segment ids that should be re-synthesized after this update"
+          },
+          "enqueueTtsUpdate": {
+            "type": "boolean",
+            "default": true,
+            "description": "When true (default), the dubbing segments listed in `segmentsToRedub` are queued for TTS regeneration from their `words`. Set to false to save edits without re-synthesis (for example, text-only fixes) — you must still send the full `words` array for every segment."
+          },
+          "subtitles": {
+            "type": "array",
+            "description": "Full segment list for the target language track. The endpoint performs a bulk replace, so the array must contain every segment in the final state, not just the edited ones. Every segment must include a non-empty `words` array; omitting a segment deletes it, and an empty `words` array drops the segment on the next read.",
+            "items": {
+              "$ref": "#/components/schemas/SubtitleSegment"
+            }
+          }
+        }
+      },
+      "TranslateRecordingRequest": {
+        "type": "object",
+        "required": [
+          "languages"
+        ],
+        "properties": {
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Target languages to (re-)translate. A language already present on the recording is retranslated, not skipped — only list a language here if you want it (re-)run. Any BCP-47-style code with translation support is accepted except the literal `auto` placeholder. Do not pass the recording's source language — the Studio UI excludes it from the picker, but this field does not reject it."
+          },
+          "ignoredLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "Subset of `languages` to record as intentionally not translated (tracked on the recording so it shows as deliberately skipped, not pending or failed) instead of actually running translation for it"
+          },
+          "tmsProjectTemplateUid": {
+            "type": "string",
+            "description": "TMS project template to use if translation is routed through a connected TMS"
+          },
+          "subtitleProfiles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Subtitle profile id per language code. List available ids with GET /v1/subtitle-profiles."
+          },
+          "styleGuides": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Style guide id per language code. Style guides belong to a separate Phrase system (Frame), not Phrase Studio itself — no external Studio API lists them."
+          },
+          "termBases": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Term base ids per language code. Term bases belong to a connected TMS, not Phrase Studio itself — no external Studio API lists them."
+          }
+        }
+      },
+      "AddDubbingRequest": {
+        "type": "object",
+        "required": [
+          "languages"
+        ],
+        "properties": {
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Target languages to (re-)dub. A language already present on the recording is re-dubbed, not skipped. Each language must already be translated on this recording (see POST .../translate) — this is not checked, so an untranslated language is silently accepted but produces no dubbing output. Each language must also be supported by the project's configured TTS provider, which IS checked — an unsupported language fails the whole request with 400."
+          },
+          "ignoredLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Accepted for shape-parity with TranslateRecordingRequest; has no effect on dubbing"
+          },
+          "pronunciations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Pronunciation ruleset id per language code"
+          }
+        }
+      },
+      "SubtitleSegmentResponseItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "time_begin",
+          "time_end",
+          "words",
+          "speaker",
+          "language"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "speaker": {
+            "type": "string"
+          },
+          "time_begin": {
+            "type": "number",
+            "minimum": 0
+          },
+          "time_end": {
+            "type": "number",
+            "minimum": 0
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubtitleWord"
+            }
+          },
+          "language": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "cue_settings": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "SubtitleSegmentResponse": {
+        "type": "object",
+        "required": [
+          "subtitles",
+          "participantNames"
+        ],
+        "properties": {
+          "participantNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bgVolume": {
+            "type": "number"
+          },
+          "speakerVolumes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "speakerVoiceSettings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "subtitles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubtitleSegmentResponseItem"
+            }
+          }
+        }
+      }
+    }
+  }
+}

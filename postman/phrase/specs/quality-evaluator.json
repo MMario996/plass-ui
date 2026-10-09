@@ -1,0 +1,718 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Quality Evaluator API",
+    "description": "The Quality Evaluator API evaluates the quality of translated segments with LLM-based AI Checks.\nQuality requirements are managed as Style Guide Rules on a Content Group. Evaluate segments by referencing\nthe Content Group and the API resolves the checks that apply to it automatically.\n",
+    "version": "1.0.0",
+    "termsOfService": "https://phrase.com/terms/",
+    "contact": {
+      "name": "Phrase Support",
+      "url": "https://support.phrase.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://eu.phrase.com/quality-evaluator",
+      "description": "Production EU"
+    },
+    {
+      "url": "https://us.phrase.com/quality-evaluator",
+      "description": "Production US"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Analytics",
+      "description": "Retrieve aggregated evaluation analytics."
+    },
+    {
+      "name": "Evaluation",
+      "description": "Evaluate translation quality against the checks of a Content Group."
+    },
+    {
+      "name": "Quality Profiles",
+      "description": "Inspect the Rules that apply to a Content Group."
+    }
+  ],
+  "paths": {
+    "/v1/analytics": {
+      "get": {
+        "operationId": "getAnalytics",
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get analytics",
+        "description": "Returns aggregated daily evaluation rollup data for the caller's organization, optionally filtered by date range.\n\nRequires **ADMIN** or **OWNER** IDM role.",
+        "parameters": [
+          {
+            "name": "qualityProfileUid",
+            "in": "query",
+            "description": "Filter results to a specific Quality Profile. Omit to return data across all profiles. Evaluations run through a Content Group are not tied to a Quality Profile.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dayAfter",
+            "in": "query",
+            "description": "Start of the date range, inclusive (UTC). Defaults to the first day of 11 months ago (UTC) if not provided.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dayBefore",
+            "in": "query",
+            "description": "End of the date range, inclusive (UTC). Defaults to today (UTC) if not provided.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsListResponse"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "qualityProfileUid": "6804b1c2d3e4f5a6b7c80123",
+                      "day": "2024-03-20T00:00:00Z",
+                      "sumProcessed": 1250,
+                      "sumLocked": 980,
+                      "sumAiuConsumed": 3750,
+                      "sumConfirmed": 880
+                    },
+                    {
+                      "qualityProfileUid": "6804b1c2d3e4f5a6b7c80123",
+                      "day": "2024-03-19T00:00:00Z",
+                      "sumProcessed": 890,
+                      "sumLocked": 710,
+                      "sumAiuConsumed": 2670,
+                      "sumConfirmed": 610
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/v3/evaluation": {
+      "post": {
+        "operationId": "evaluateV3",
+        "tags": [
+          "Evaluation"
+        ],
+        "summary": "Evaluate segments",
+        "description": "Resolves the AI Checks (Style Guide Rules with AI Check enabled) that apply to the given Content Group and target locale, and evaluates every segment against each of them.\n\nWhen no checks are associated with the Content Group, all segments are returned with an empty `results` array and no error is raised. Segments with an empty or blank target are not evaluated and are returned with an empty `results` array.\n\nRequires **ADMIN** or **OWNER** IDM role.",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "application/json"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationV3Request"
+              },
+              "example": {
+                "contentGroupId": "cg-abc123",
+                "segments": [
+                  {
+                    "id": "segment-1",
+                    "source": "Hello, world!",
+                    "target": "Hallo, Welt!"
+                  }
+                ],
+                "sourceLocaleCode": "en_us",
+                "targetLocaleCode": "de_de"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluation completed successfully. Returns evaluated segments with per-check results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationV3Response"
+                },
+                "example": {
+                  "contentGroupId": "cg-abc123",
+                  "segments": [
+                    {
+                      "id": "segment-1",
+                      "source": "Hello, world!",
+                      "target": "Hallo, Welt!",
+                      "results": [
+                        {
+                          "type": "AI_CHECK",
+                          "ruleUid": "rule-abc123",
+                          "evaluation": {
+                            "isValid": true,
+                            "explanation": "The translation uses standard German sentence structure."
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request. A required field is missing or invalid, or segment `id` values are not unique within the request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "503": {
+            "description": "Service Unavailable. The evaluation was interrupted; retry the request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/v3/qualityProfiles/{contentGroupId}": {
+      "parameters": [
+        {
+          "name": "contentGroupId",
+          "in": "path",
+          "required": true,
+          "description": "ID of the Content Group whose Rules are to be retrieved.",
+          "schema": {
+            "type": "string",
+            "example": "cg-abc123"
+          }
+        },
+        {
+          "name": "locale",
+          "in": "query",
+          "required": false,
+          "description": "When provided, only rules that apply to the given locale are returned. When absent, all rules for the Content Group are returned regardless of locale restrictions.",
+          "schema": {
+            "$ref": "#/components/schemas/LocaleCode"
+          }
+        },
+        {
+          "name": "checkEnabled",
+          "in": "query",
+          "required": false,
+          "description": "Filters rules by their `aiCheckEnabled` state. When absent, rules are returned regardless of state.",
+          "schema": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        {
+          "name": "checkText",
+          "in": "query",
+          "required": false,
+          "description": "Case-insensitive contains-match filter on the rule requirement text. When absent, rules are returned regardless of their text.",
+          "schema": {
+            "type": "string",
+            "maxLength": 450,
+            "example": "passive voice"
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "description": "Sort field.",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "checkEnabled"
+            ]
+          }
+        },
+        {
+          "name": "order",
+          "in": "query",
+          "required": false,
+          "description": "Sort order. Only applied when `sort` is provided.",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getQualityProfileV3",
+        "tags": [
+          "Quality Profiles"
+        ],
+        "summary": "Get Quality Profile by Content Group",
+        "description": "Returns the Quality Profile for the given Content Group: the active Rules that apply to it, including Rules with AI Check disabled (see `aiCheckEnabled` on each rule). The profile is resolved dynamically to reflect the current state of the linked Content Group.\n\nOptionally filter by locale, AI Check enabled state, and rule text, and sort by AI Check enabled state.",
+        "responses": {
+          "200": {
+            "description": "Quality Profile resolved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityProfileV3Response"
+                },
+                "example": {
+                  "rules": [
+                    {
+                      "id": "rule-abc123",
+                      "text": "The translation must not use passive voice.",
+                      "name": "No passive voice",
+                      "omittedReason": null,
+                      "locales": [],
+                      "aiCheckEnabled": true
+                    },
+                    {
+                      "id": "rule-def456",
+                      "text": "The translation must use formal language.",
+                      "name": "Formal language",
+                      "omittedReason": null,
+                      "locales": [
+                        "de_de",
+                        "de_at"
+                      ],
+                      "aiCheckEnabled": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Use a Bearer token obtained from Phrase Platform authentication. See the Authentication guide for details on how to obtain a token."
+      }
+    },
+    "responses": {
+      "UnauthorizedResponse": {
+        "description": "Authentication failed or credentials not provided.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            },
+            "example": {
+              "type": "urn:problem-type:unauthorized",
+              "title": "Unauthorized",
+              "status": 401,
+              "detail": "Valid credentials were not supplied"
+            }
+          }
+        }
+      },
+      "ForbiddenResponse": {
+        "description": "Insufficient permissions. This operation requires the ADMIN or OWNER IDM role.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            },
+            "example": {
+              "type": "urn:problem-type:forbidden",
+              "title": "Forbidden",
+              "status": 403,
+              "detail": "Insufficient permissions to perform this action"
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "description": "An error occurred.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "EvaluationItemType": {
+        "type": "string",
+        "description": "Discriminator for the type of check that produced this result.",
+        "enum": [
+          "AI_CHECK"
+        ]
+      },
+      "AnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "qualityProfileUid": {
+            "type": "string",
+            "description": "Quality Profile this rollup entry belongs to. Null when the evaluation was not tied to a Quality Profile, such as an evaluation through a Content Group.",
+            "example": "6804b1c2d3e4f5a6b7c80123"
+          },
+          "day": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC day this rollup covers (midnight boundary).",
+            "example": "2024-03-20T00:00:00Z"
+          },
+          "sumProcessed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of segments processed on this day.",
+            "example": 1250
+          },
+          "sumLocked": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total source word count of segments locked on this day.",
+            "example": 980
+          },
+          "sumConfirmed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total source word count of segments confirmed on this day.",
+            "example": 880
+          },
+          "sumAiuConsumed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "AI units consumed on this day.",
+            "example": 3750
+          }
+        },
+        "required": [
+          "day",
+          "sumProcessed",
+          "sumLocked",
+          "sumConfirmed",
+          "sumAiuConsumed"
+        ]
+      },
+      "AnalyticsListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "LocaleCode": {
+        "type": "string",
+        "description": "Locale code compatible with Phrase locale format. Case-insensitive, supports both underscore and hyphen separators (e.g., `en_us`, `en-US`, `de_de`, `fr_fr`).",
+        "example": "en_us"
+      },
+      "ProblemDetail": {
+        "type": "object",
+        "description": "Error response following RFC 9457.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "A URI reference identifying the problem type.",
+            "example": "urn:problem-type:unauthorized"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short, human-readable summary of the problem.",
+            "example": "Unauthorized"
+          },
+          "status": {
+            "type": "integer",
+            "description": "The HTTP status code.",
+            "example": 401
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence.",
+            "example": "Valid credentials were not supplied"
+          },
+          "instance": {
+            "type": "string",
+            "description": "A URI reference identifying the specific occurrence."
+          }
+        }
+      },
+      "EvaluationV3Request": {
+        "type": "object",
+        "description": "Request to evaluate translation segments using the AI Checks resolved from a Content Group.",
+        "properties": {
+          "contentGroupId": {
+            "type": "string",
+            "description": "ID of the Content Group whose AI Checks are used for evaluation."
+          },
+          "segments": {
+            "type": "array",
+            "description": "Segments to evaluate. Each segment `id`, when provided, must be unique within the request; duplicate ids result in a 400 Bad Request.",
+            "minItems": 1,
+            "maxItems": 200,
+            "items": {
+              "$ref": "#/components/schemas/RequestSegmentV3"
+            }
+          },
+          "sourceLocaleCode": {
+            "$ref": "#/components/schemas/LocaleCode"
+          },
+          "targetLocaleCode": {
+            "$ref": "#/components/schemas/LocaleCode"
+          }
+        },
+        "required": [
+          "contentGroupId",
+          "segments",
+          "sourceLocaleCode",
+          "targetLocaleCode"
+        ]
+      },
+      "RequestSegmentV3": {
+        "type": "object",
+        "description": "A translation segment to evaluate.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier for the segment, such as a TUnit ID. Optional, but when provided it must be unique within the request. It is echoed back in the response."
+          },
+          "source": {
+            "type": "string",
+            "description": "Source text that was translated."
+          },
+          "target": {
+            "type": "string",
+            "description": "Translated text to evaluate. Segments with an empty or blank target are not evaluated."
+          }
+        },
+        "required": [
+          "source",
+          "target"
+        ]
+      },
+      "EvaluationV3Response": {
+        "type": "object",
+        "description": "Evaluation results for the v3 endpoint.",
+        "properties": {
+          "contentGroupId": {
+            "type": "string",
+            "description": "ID of the Content Group whose AI Checks were used for evaluation."
+          },
+          "segments": {
+            "type": "array",
+            "description": "Evaluated segments with all check results nested per segment.",
+            "items": {
+              "$ref": "#/components/schemas/EvaluatedSegmentV3"
+            }
+          }
+        },
+        "required": [
+          "segments"
+        ]
+      },
+      "EvaluatedSegmentV3": {
+        "type": "object",
+        "description": "A single segment with the results of all checks.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Segment identifier, echoed from the request when one was supplied."
+          },
+          "source": {
+            "type": "string",
+            "description": "Source text."
+          },
+          "target": {
+            "type": "string",
+            "description": "Translated text."
+          },
+          "results": {
+            "type": "array",
+            "description": "Results from all checks for this segment.",
+            "items": {
+              "$ref": "#/components/schemas/CheckResultV3"
+            }
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "results"
+        ]
+      },
+      "CheckResultV3": {
+        "type": "object",
+        "description": "Result from a single check for a segment. AI Checks always produce one result per Rule for each evaluated segment.",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/EvaluationItemType",
+            "description": "Type of check that produced this result."
+          },
+          "ruleUid": {
+            "type": "string",
+            "description": "UID of the Rule that produced this result."
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/CheckEvaluationV3"
+          }
+        },
+        "required": [
+          "type",
+          "evaluation"
+        ]
+      },
+      "CheckEvaluationV3": {
+        "type": "object",
+        "description": "Evaluation result for a check. `isValid` is the LLM decision and `explanation` is the LLM reasoning. `hasError` is true when the LLM call failed to produce a valid answer.",
+        "properties": {
+          "isValid": {
+            "type": "boolean",
+            "description": "Whether the segment passed this check."
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Reasoning from the AI Check."
+          },
+          "hasError": {
+            "type": "boolean",
+            "description": "True when the check could not produce a result (LLM failure)."
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Error description when hasError is true."
+          }
+        }
+      },
+      "QualityProfileV3Response": {
+        "type": "object",
+        "description": "Quality Profile resolved from a Content Group: the active Rules that apply to it.",
+        "properties": {
+          "rules": {
+            "type": "array",
+            "description": "Active rules for the given Content Group. Includes rules with AI Check disabled; see `aiCheckEnabled` on each rule.",
+            "items": {
+              "$ref": "#/components/schemas/QualityProfileV3Rule"
+            }
+          }
+        },
+        "required": [
+          "rules"
+        ]
+      },
+      "QualityProfileV3Rule": {
+        "type": "object",
+        "description": "A single rule that forms part of the Quality Profile.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the rule.",
+            "example": "rule-abc123"
+          },
+          "text": {
+            "type": "string",
+            "description": "The rule requirement text sent to the LLM for evaluation.",
+            "example": "The translation must not use passive voice."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A short, system-generated name indicating this rule's purpose. Never user-entered; automatically generated, so it may be `null` shortly after the rule is created.",
+            "example": "No passive voice"
+          },
+          "omittedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reason this rule is omitted from AI checks, as determined by an automated eligibility check. `null` if the rule is eligible, or if the check has not completed yet.",
+            "example": "This rule is too subjective to evaluate reliably on a single segment."
+          },
+          "locales": {
+            "type": "array",
+            "description": "Locales the rule is restricted to. An empty array means the rule applies to all locales.",
+            "items": {
+              "$ref": "#/components/schemas/LocaleCode"
+            }
+          },
+          "aiCheckEnabled": {
+            "type": "boolean",
+            "description": "Whether AI Check evaluation is enabled for this rule. Evaluation only runs on rules where this is `true`; disabled rules are still listed for visibility."
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "locales",
+          "aiCheckEnabled"
+        ]
+      }
+    }
+  }
+}

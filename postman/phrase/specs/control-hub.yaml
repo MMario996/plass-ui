@@ -1,0 +1,633 @@
+openapi: 3.0.0
+info:
+  version: 1.0.21
+  title: Control Hub Service
+  license:
+    name: Proprietary
+servers:
+- url: https://eu.phrase.com/control-hub/
+tags:
+- name: Groups
+  x-displayName: Content Groups
+  description: |
+    Organisation-scoped generic content groups and their object references.
+- name: Groups references
+  x-displayName: Content Group References
+  description: |
+    Endpoints for managing content group–object references and performing reverse lookups.
+paths:
+  /api/v1/public/references/groups:
+    get:
+      summary: Find content groups containing a reference to the given object
+      description: Reverse lookup — returns all content groups that contain a reference
+        to the specified object. Useful for discovering which groups a given object
+        belongs to.
+      tags:
+      - Groups references
+      operationId: listGroupsByReference
+      parameters:
+      - name: objectType
+        in: query
+        required: true
+        description: Type of the platform object
+        schema:
+          $ref: '#/components/schemas/GroupReferenceObjectType'
+      - name: objectUid
+        in: query
+        required: true
+        description: Identifier of the platform object
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Content groups that contain a reference to the given object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupsByReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+  /api/v1/public/groups:
+    post:
+      summary: Create a content group
+      tags:
+      - Groups
+      operationId: createGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '201':
+          description: Content group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          $ref: '#/components/responses/422'
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      summary: List content groups for the caller's organization
+      tags:
+      - Groups
+      operationId: listGroups
+      parameters:
+      - name: page
+        description: 'Zero-based page index (default: 0)'
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+      - name: includeSystem
+        description: Whether to include the organization's SYSTEM content group in
+          the results
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+      responses:
+        '200':
+          description: List of content groups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupListResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+  /api/v1/public/groups/{groupId}:
+    get:
+      summary: Get a single content group
+      tags:
+      - Groups
+      operationId: getGroup
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier. The literal value `SYSTEM` may be used
+          as an alias for the organization's SYSTEM content group.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Content group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      summary: Update a content group
+      tags:
+      - Groups
+      operationId: updateGroup
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupRequest'
+      responses:
+        '200':
+          description: Content group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '422':
+          $ref: '#/components/responses/422'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      summary: Delete a content group
+      description: Deletes the content group and all its object references.
+      tags:
+      - Groups
+      operationId: deleteGroup
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier
+        schema:
+          type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+  /api/v1/public/groups/{groupId}/references:
+    post:
+      summary: Link an object to the content group
+      tags:
+      - Groups references
+      operationId: createGroupReference
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier. The literal value `SYSTEM` may be used
+          as an alias for the organization's SYSTEM content group.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupReferenceRequest'
+      responses:
+        '201':
+          description: Reference created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupReference'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '422':
+          $ref: '#/components/responses/422'
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      summary: List references linked to the content group
+      tags:
+      - Groups references
+      operationId: listGroupReferences
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier. The literal value `SYSTEM` may be used
+          as an alias for the organization's SYSTEM content group.
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: false
+        description: Filter references by object type. When omitted, all references
+          are returned.
+        schema:
+          $ref: '#/components/schemas/GroupReferenceObjectType'
+      - name: page
+        description: 'Zero-based page index (default: 0)'
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+      - name: includeSystem
+        description: Whether to include references belonging to the organization's
+          SYSTEM content group in the results
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+      responses:
+        '200':
+          description: References linked to this content group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupReferenceListResponse'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      summary: Unlink an object from the content group by object identity
+      description: Removes the reference identified by the natural key (groupId +
+        objectType + objectUid). Returns 404 if no matching reference exists.
+      tags:
+      - Groups references
+      operationId: deleteGroupReferenceByIdentity
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier. The literal value `SYSTEM` may be used
+          as an alias for the organization's SYSTEM content group.
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: true
+        description: Type of the platform object
+        schema:
+          $ref: '#/components/schemas/GroupReferenceObjectType'
+      - name: objectUid
+        in: query
+        required: true
+        description: Identifier of the platform object to unlink
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+  /api/v1/public/groups/{groupId}/references/{referenceId}:
+    delete:
+      summary: Unlink an object from the content group
+      tags:
+      - Groups references
+      operationId: deleteGroupReference
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: Content group identifier. The literal value `SYSTEM` may be used
+          as an alias for the organization's SYSTEM content group.
+        schema:
+          type: string
+      - name: referenceId
+        in: path
+        required: true
+        description: Reference identifier
+        schema:
+          type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+components:
+  schemas:
+    GroupsByReferenceResponse:
+      type: object
+      required:
+      - groups
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    Error:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          title: Error code
+          example: NotBlank/NotFound/Error/...
+          type: string
+        message:
+          title: Error message
+          example: Organization UID cannot be null
+          type: string
+        args:
+          title: Map of error arguments - so they are not needed to be parsed from
+            the message
+          type: object
+          additionalProperties: true
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorEntry'
+          description: list of errors this error consist of
+    ErrorEntry:
+      required:
+      - code
+      - message
+      properties:
+        message:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        args:
+          type: object
+          additionalProperties: true
+          description: More information about error
+    Page:
+      description: |
+        Pagination metadata returned alongside paged collection responses. Use `page` and `size` as query parameters to navigate through results. Pages are zero-indexed — the first page is `page=0`.
+      required:
+      - totalElements
+      - totalPages
+      - pageSize
+      - pageNumber
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements across all pages.
+        totalPages:
+          type: integer
+          description: Total number of pages given the current `pageSize`.
+        pageSize:
+          type: integer
+          description: Maximum number of elements returned per page.
+        pageNumber:
+          type: integer
+          description: Zero-based index of the current page.
+    Group:
+      type: object
+      required:
+      - id
+      - name
+      - createdAt
+      - updatedAt
+      - groupType
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the content group
+        name:
+          type: string
+          description: Content group name (not required to be unique within the organization)
+        description:
+          type: string
+          description: Optional free-text description
+        createdAt:
+          type: string
+          description: When the content group was created — timestamp (ISO-8601 format)
+        updatedAt:
+          type: string
+          description: When the content group was last updated — timestamp (ISO-8601
+            format)
+        groupType:
+          $ref: '#/components/schemas/GroupType'
+    GroupType:
+      type: string
+      description: |
+        Whether the group is customer-created (USER) or a platform-managed system group (SYSTEM).
+        Every organization has exactly one SYSTEM group, representing "applies to all content
+        groups." SYSTEM groups are created automatically and cannot be created, updated, or
+        deleted via the API — only USER groups can. Server-determined, never accepted on
+        create/update requests.
+      enum:
+      - SYSTEM
+      - USER
+    GroupReferenceObjectType:
+      type: string
+      description: |
+        Type of platform object being linked.
+
+        `PLATFORM_STYLE_GUIDE`, `TMS_PROJECT` and `TMS_PROJECT_TEMPLATE` cannot be linked to the
+        organization's SYSTEM content group — the request is rejected with a `422` error, code
+        `Conflict`. `PLATFORM_QA_CHECK` and `PLATFORM_STYLE_RULE` are unaffected.
+
+        A `TMS_PROJECT` and `TMS_PROJECT_TEMPLATE` can only belong to one content group at a time.
+        Creating a direct reference to a second group is rejected with a `422` error, code
+        `Conflict`; unlink it from its current group first (`DELETE /groups/{groupId}/references/{referenceId}`
+        or `DELETE /groups/{groupId}/references`) before linking it to a new one.
+      enum:
+      - PLATFORM_STYLE_GUIDE
+      - PLATFORM_STYLE_RULE
+      - TMS_PROJECT
+      - PLATFORM_QA_CHECK
+      - TMS_PROJECT_TEMPLATE
+    ReferenceType:
+      type: string
+      description: |
+        Whether the reference belongs to the organization's SYSTEM content group (SYSTEM) or
+        to a regular, user-created content group (USER). Computed by the server from the
+        reference's group, never accepted on create requests.
+      enum:
+      - SYSTEM
+      - USER
+    CreateGroupRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: Content group name (not required to be unique within the organization)
+          minLength: 1
+        description:
+          type: string
+          description: Optional free-text description
+    UpdateGroupRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: Content group name (not required to be unique within the organization)
+          minLength: 1
+        description:
+          type: string
+          description: Optional free-text description
+    GroupListResponse:
+      allOf:
+      - $ref: '#/components/schemas/Page'
+      - type: object
+        required:
+        - content
+        properties:
+          content:
+            type: array
+            items:
+              $ref: '#/components/schemas/Group'
+    GroupReference:
+      type: object
+      required:
+      - id
+      - groupId
+      - objectType
+      - objectUid
+      - createdAt
+      - referenceType
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the reference
+        groupId:
+          type: string
+          description: Identifier of the content group this reference belongs to
+        objectType:
+          $ref: '#/components/schemas/GroupReferenceObjectType'
+        objectUid:
+          type: string
+          description: Identifier of the linked platform object
+        createdAt:
+          type: string
+          description: When the reference was created — timestamp (ISO-8601 format)
+        referenceType:
+          $ref: '#/components/schemas/ReferenceType'
+    CreateGroupReferenceRequest:
+      type: object
+      required:
+      - objectType
+      - objectUid
+      properties:
+        objectType:
+          $ref: '#/components/schemas/GroupReferenceObjectType'
+        objectUid:
+          type: string
+          description: Identifier of the platform object to link
+          minLength: 1
+    GroupReferenceListResponse:
+      allOf:
+      - $ref: '#/components/schemas/Page'
+      - type: object
+        required:
+        - content
+        properties:
+          content:
+            type: array
+            items:
+              $ref: '#/components/schemas/GroupReference'
+  responses:
+    '204':
+      description: Operation performed successfully, no content returned
+    '400':
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    '401':
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    '404':
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    '422':
+      description: Validation of the input data failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
